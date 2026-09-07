@@ -1,4 +1,5 @@
 ﻿using LeaveManagement.Data;
+using LeaveManagement.DTO;
 using LeaveManagement.Models.Entities;
 using Microsoft.EntityFrameworkCore;
 
@@ -13,7 +14,7 @@ namespace LeaveManagement.Services
             _db = db;
         }
 
-        public async Task<Leaverequest?> ApplyLeaveAsync(Leaverequest leaverequest)
+        public async Task<Leaverequest?> ApplyLeaveAsync(LeaverequestDTO leaverequest)
         {
             var employee = await _db.Employees
                 .FirstOrDefaultAsync(e =>
@@ -75,17 +76,18 @@ namespace LeaveManagement.Services
                 throw new ArgumentException(
                     "Leave request overlaps with an existing leave period.");
             }
+            Leaverequest leave = new Leaverequest();
+            leave.employeeid= leaverequest.employeeid;
+            leave.leavetypeid= leaverequest.leavetypeid;
+            leave.fromdate= leaverequest.fromdate;
+            leave.todate= leaverequest.todate;
+            leave.reason= leaverequest.reason;
 
-            leaverequest.status = "Pending";
-            leaverequest.applieddate = DateTime.Now;
-            leaverequest.approvedby = null;
-            leaverequest.comments = null;
-
-            _db.Leaverequests.Add(leaverequest);
+            _db.Leaverequests.Add(leave);
 
             await _db.SaveChangesAsync();
 
-            return leaverequest;
+            return leave;
         }
 
         public async Task<IEnumerable<Leaverequest>> GetAllLeavesAsync(

@@ -27,11 +27,11 @@ namespace LeaveManagement.Models.Entities
         public string status { get; set; } = "Pending";
 
         [Required]
-        public DateTime applieddate { get; set; }
+        public DateTime applieddate { get; set; } = DateTime.Now;
 
-        public string? approvedby { get; set; }
+        public string? approvedby { get; set; } = null;
 
-        public string? comments { get; set; }
+        public string? comments { get; set; } = null;
 
         [ForeignKey("employeeid")]
         public Employee? Employee { get; set; }

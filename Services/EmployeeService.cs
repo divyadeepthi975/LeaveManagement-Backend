@@ -1,11 +1,10 @@
 ﻿using LeaveManagement.Data;
 using LeaveManagement.Models.Entities;
-using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.EntityFrameworkCore;
 
 namespace LeaveManagement.Services
 {
-    public class EmployeeService 
+    public class EmployeeService : IEmployeeService
     {
         private readonly AppDbContext _db ;
         public EmployeeService(AppDbContext db)
@@ -13,7 +12,7 @@ namespace LeaveManagement.Services
             _db = db;
         }
         
-        public async Task<Models.Entities.Employee> AddAsync(Models.Entities.Employee employee)
+        public async Task<Employee> AddAsync(Employee employee)
         {
             _db.Employees.Add(employee);
             await _db.SaveChangesAsync();
@@ -32,17 +31,17 @@ namespace LeaveManagement.Services
             return true;
         }
 
-        public async Task<IEnumerable<Models.Entities.Employee>> GetAllAsync()
+        public async Task<IEnumerable<Employee>> GetAllAsync()
         {
             return await _db.Employees.ToListAsync();
         }
 
-        public async Task<Models.Entities.Employee?> GetByIdAsync(int id)
+        public async Task<Employee?> GetByIdAsync(int id)
         {
             return await _db.Employees.FindAsync(id);
         }
 
-        public async Task<Models.Entities.Employee?> UpdateAsync(Models.Entities.Employee employee)
+        public async Task<Employee?> UpdateAsync(Employee employee)
         {
             var emp=await _db.Employees.FirstOrDefaultAsync(e => e.EmployeeId == employee.EmployeeId);
             if (emp == null)

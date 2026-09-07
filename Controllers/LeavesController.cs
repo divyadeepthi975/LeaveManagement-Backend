@@ -1,4 +1,5 @@
-﻿using LeaveManagement.Models.Entities;
+﻿using LeaveManagement.DTO;
+using LeaveManagement.Models.Entities;
 using LeaveManagement.Services;
 using Microsoft.AspNetCore.Mvc;
 
@@ -16,7 +17,7 @@ namespace LeaveManagement.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> ApplyLeave([FromBody] Leaverequest leaverequest)
+        public async Task<IActionResult> ApplyLeave([FromBody] LeaverequestDTO leaverequest)
         {
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
