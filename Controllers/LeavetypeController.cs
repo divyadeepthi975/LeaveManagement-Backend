@@ -1,4 +1,5 @@
-﻿using LeaveManagement.Models.Entities;
+﻿using LeaveManagement.DTO;
+using LeaveManagement.Models.Entities;
 using LeaveManagement.Services;
 using Microsoft.AspNetCore.Mvc;
 
@@ -8,9 +9,9 @@ namespace LeaveManagement.Controllers
     [ApiController]
     public class LeavetypesController : ControllerBase
     {
-        private readonly LeavetypeService _leavetypeService;
+        private readonly ILeavetypeService _leavetypeService;
 
-        public LeavetypesController(LeavetypeService leavetypeService)
+        public LeavetypesController(ILeavetypeService leavetypeService)
         {
             _leavetypeService = leavetypeService;
         }
@@ -40,7 +41,7 @@ namespace LeaveManagement.Controllers
 
         // POST: api/Leavetypes
         [HttpPost]
-        public async Task<IActionResult> Create(Leavetype leavetype)
+        public async Task<IActionResult> Create(LeavetypeDTO leavetype)
         {
             if (!ModelState.IsValid)
             {
@@ -69,7 +70,7 @@ namespace LeaveManagement.Controllers
                 return BadRequest(ModelState);
             }
 
-            var result = await _leavetypeService.UpdateAsync(leavetype);
+            var result = await _leavetypeService.UpdateLeavetypeAsync(leavetype);
 
             if (result == null)
             {

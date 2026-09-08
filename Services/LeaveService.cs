@@ -5,7 +5,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace LeaveManagement.Services
 {
-    public class LeaveService
+    public class LeaveService : ILeaveService
     {
         private readonly AppDbContext _db;
 
@@ -150,14 +150,11 @@ namespace LeaveManagement.Services
                     l.leaverequestid == id);
         }
 
-        public async Task<Leaverequest?> ApproveLeaveAsync(
-            int id,
-            string approvedBy,
-            string? comments)
+        public async Task<Leaverequest?> ApproveLeaveAsync(LeaveActionDTO leave)
         {
             var leaveRequest = await _db.Leaverequests
                 .FirstOrDefaultAsync(l =>
-                    l.leaverequestid == id);
+                    l.leaverequestid == leave.id);
 
             if (leaveRequest == null)
             {
@@ -181,22 +178,18 @@ namespace LeaveManagement.Services
                     "Leave balance not found.");
             }
 
-            int numberOfDays =
-                (leaveRequest.todate.Date -
-                 leaveRequest.fromdate.Date).Days + 1;
+            int numberOfDays =(leaveRequest.todate.Date-leaveRequest.fromdate.Date).Days + 1;
 
-            int remainingDays =
-                balance.totaldays - balance.useddays;
+            int remainingDays =balance.totaldays - balance.useddays;
 
             if (numberOfDays > remainingDays)
             {
-                throw new ArgumentException(
-                    "Insufficient leave balance.");
+                throw new ArgumentException("Insufficient leave balance.");
             }
 
             leaveRequest.status = "Approved";
-            leaveRequest.approvedby = approvedBy;
-            leaveRequest.comments = comments;
+            leaveRequest.approvedby = leave.approvedby;
+            leaveRequest.comments = leave.comments;
 
             balance.useddays += numberOfDays;
 
@@ -205,14 +198,11 @@ namespace LeaveManagement.Services
             return leaveRequest;
         }
 
-        public async Task<Leaverequest?> RejectLeaveAsync(
-            int id,
-            string approvedBy,
-            string? comments)
+        public async Task<Leaverequest?> RejectLeaveAsync(LeaveActionDTO leave)
         {
             var leaveRequest = await _db.Leaverequests
                 .FirstOrDefaultAsync(l =>
-                    l.leaverequestid == id);
+                    l.leaverequestid == leave.id);
 
             if (leaveRequest == null)
             {
@@ -226,8 +216,8 @@ namespace LeaveManagement.Services
             }
 
             leaveRequest.status = "Rejected";
-            leaveRequest.approvedby = approvedBy;
-            leaveRequest.comments = comments;
+            leaveRequest.approvedby = leave.approvedby;
+            leaveRequest.comments = leave.comments;
 
             await _db.SaveChangesAsync();
 

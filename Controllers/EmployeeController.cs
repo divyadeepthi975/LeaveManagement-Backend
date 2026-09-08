@@ -1,4 +1,5 @@
-﻿using LeaveManagement.Models.Entities;
+﻿using LeaveManagement.DTO;
+using LeaveManagement.Models.Entities;
 using LeaveManagement.Services;
 using Microsoft.AspNetCore.Mvc;
 
@@ -37,7 +38,7 @@ namespace LeaveManagement.Controllers
 
         // POST: api/employees
         [HttpPost]
-        public async Task<IActionResult> CreateEmployee(Models.Entities.Employee employee)
+        public async Task<IActionResult> CreateEmployee(EmployeeDTO employee)
         {
             var createdEmployee = await _employeeService.AddAsync(employee);
 
@@ -48,7 +49,7 @@ namespace LeaveManagement.Controllers
         }
 
         [HttpPut("{id}")]
-        public async Task<IActionResult> UpdateEmployee(int id, Models.Entities.Employee employee)
+        public async Task<IActionResult> UpdateEmployee(int id, Employee employee)
         {
             if (id != employee.EmployeeId)
             {

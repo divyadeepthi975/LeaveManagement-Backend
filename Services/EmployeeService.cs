@@ -1,4 +1,5 @@
 ﻿using LeaveManagement.Data;
+using LeaveManagement.DTO;
 using LeaveManagement.Models.Entities;
 using Microsoft.EntityFrameworkCore;
 
@@ -11,12 +12,26 @@ namespace LeaveManagement.Services
         {
             _db = db;
         }
-        
-        public async Task<Employee> AddAsync(Employee employee)
+
+        public async Task<Employee> AddAsync(EmployeeDTO employee)
         {
-            _db.Employees.Add(employee);
+            bool exists = await _db.Employees.AnyAsync(e => e.EmployeeCode == employee.EmployeeCode);
+
+            if (exists)
+            {
+                throw new Exception("Employee code already exists.");
+            }
+
+            Employee emp = new Employee();
+            emp.EmployeeCode = employee.EmployeeCode;
+            emp.Name = employee.Name;
+            emp.Department = employee.Department;
+            emp.Email = employee.Email;
+            emp.JoiningDate = employee.JoiningDate;
+
+            _db.Employees.Add(emp);
             await _db.SaveChangesAsync();
-            return employee;
+            return emp;
         }
 
         public async Task<bool> DeleteAsync(int id)

@@ -1,10 +1,11 @@
 ﻿using LeaveManagement.Models.Entities;
+using LeaveManagement.DTO;
 
 namespace LeaveManagement.Services
 {
     public interface ILeavetypeService
     {
-        Task<Leavetype> AddAsync(Leavetype leavetype);
+        Task<Leavetype> AddAsync(LeavetypeDTO leavetype);
 
         Task<bool> DeleteAsync(int id);
 
@@ -12,6 +13,6 @@ namespace LeaveManagement.Services
 
         Task<Leavetype?> GetLeavetypeAsync(int id);
 
-        Task<Leavetype?> UpdateAsync(Leavetype leavetype);
+        Task<Leavetype?> UpdateLeavetypeAsync(Leavetype leavetype);
     }
 }

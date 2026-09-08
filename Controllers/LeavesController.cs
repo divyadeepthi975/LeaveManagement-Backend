@@ -75,22 +75,17 @@ namespace LeaveManagement.Controllers
         }
 
         [HttpPut("{id}/approve")]
-        public async Task<IActionResult> Approve(
-            int id,
-            [FromBody] LeaveActionRequest request)
+        public async Task<IActionResult> Approve(int id, [FromBody]LeaveActionDTO leave)
         {
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
             try
             {
-                var result = await _leaveService.ApproveLeaveAsync(
-                    id,
-                    request.ApprovedBy,
-                    request.Comments);
+                var result = await _leaveService.ApproveLeaveAsync(leave);
 
                 if (result == null)
-                    return NotFound($"Leave request with ID {id} not found.");
+                    return NotFound($"Leave request with ID {leave.id} not found.");
 
                 return Ok(result);
             }
@@ -101,19 +96,14 @@ namespace LeaveManagement.Controllers
         }
 
         [HttpPut("{id}/reject")]
-        public async Task<IActionResult> Reject(
-            int id,
-            [FromBody] LeaveActionRequest request)
+        public async Task<IActionResult> Reject(int id, [FromBody] LeaveActionDTO leave)
         {
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
             try
             {
-                var result = await _leaveService.RejectLeaveAsync(
-                    id,
-                    request.ApprovedBy,
-                    request.Comments);
+                var result = await _leaveService.RejectLeaveAsync(leave);
 
                 if (result == null)
                     return NotFound($"Leave request with ID {id} not found.");
@@ -125,12 +115,5 @@ namespace LeaveManagement.Controllers
                 return BadRequest(ex.Message);
             }
         }
-    }
-
-    public class LeaveActionRequest
-    {
-        public string ApprovedBy { get; set; } = string.Empty;
-
-        public string? Comments { get; set; }
     }
 }

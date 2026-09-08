@@ -1,10 +1,11 @@
-﻿using LeaveManagement.Models.Entities;
+﻿using LeaveManagement.DTO;
+using LeaveManagement.Models.Entities;
 
 namespace LeaveManagement.Services
 {
     public interface IEmployeeService
     {
-        Task<Employee> AddAsync(Employee employee);
+        Task<Employee> AddAsync(EmployeeDTO employee);
 
         Task<IEnumerable<Employee>> GetAllAsync();
 

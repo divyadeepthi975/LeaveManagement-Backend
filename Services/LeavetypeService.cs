@@ -1,22 +1,25 @@
 ﻿using LeaveManagement.Data;
+using LeaveManagement.DTO;
 using LeaveManagement.Models.Entities;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 namespace LeaveManagement.Services
 {
-    public class LeavetypeService
+    public class LeavetypeService :ILeavetypeService
     {
         private readonly AppDbContext _db;
         public LeavetypeService(AppDbContext db)
         {
             _db = db;
         }
-        public async Task<Leavetype> AddAsync(Leavetype leavetype)
+        public async Task<Leavetype> AddAsync(LeavetypeDTO leavetype)
         {
-            _db.Leavetypes.Add(leavetype);
+            Leavetype leave = new Leavetype();
+            leave.leavetypename = leavetype.leavetypename;
+            leave.maximumdays= leavetype.maximumdays;
+            _db.Leavetypes.Add(leave);
             await _db.SaveChangesAsync();
-            return leavetype;
+            return leave;
         }
 
         public async Task<bool> DeleteAsync(int id)
@@ -42,7 +45,7 @@ namespace LeaveManagement.Services
 
         }
 
-        public async Task<Leavetype?> UpdateAsync(Leavetype leavetype)
+        public async Task<Leavetype?> UpdateLeavetypeAsync(Leavetype leavetype)
         {
             var objLeavetype = await _db.Leavetypes.FirstOrDefaultAsync(l => l.leavetypeid == leavetype.leavetypeid);
             if (objLeavetype == null)

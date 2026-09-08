@@ -13,8 +13,8 @@ builder.Services.AddDbContext<AppDbContext>(options =>options.UseSqlServer(
         builder.Configuration.GetConnectionString("DefaultConnection")));
 builder.Services.AddSwaggerGen();
 builder.Services.AddScoped<IEmployeeService, EmployeeService>();
-builder.Services.AddScoped<LeavetypeService>();
-builder.Services.AddScoped<LeaveService>();
+builder.Services.AddScoped<ILeavetypeService, LeavetypeService>();
+builder.Services.AddScoped< LeaveService>();
 builder.Services.AddScoped<DashboardService>();
 
 var app = builder.Build();
