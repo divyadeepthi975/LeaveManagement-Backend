@@ -1,12 +1,25 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using LeaveManagement.Services;
+using Microsoft.AspNetCore.Mvc;
 
 namespace LeaveManagement.Controllers
 {
-    public class DashboardController : Controller
+    [ApiController]
+    [Route("api/[controller]")]
+    public class DashboardController : ControllerBase
     {
-        public IActionResult Index()
+        private readonly DashboardService _dashboardService;
+
+        public DashboardController(DashboardService dashboardService)
         {
-            return View();
+            _dashboardService = dashboardService;
+        }
+
+        [HttpGet("leave-summary")]
+        public async Task<IActionResult> GetLeaveSummary()
+        {
+            var result = await _dashboardService.GetDashboardSummary();
+
+            return Ok(result);
         }
     }
 }

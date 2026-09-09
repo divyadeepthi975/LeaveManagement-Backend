@@ -14,9 +14,9 @@ builder.Services.AddDbContext<AppDbContext>(options =>options.UseSqlServer(
 builder.Services.AddSwaggerGen();
 builder.Services.AddScoped<IEmployeeService, EmployeeService>();
 builder.Services.AddScoped<ILeavetypeService, LeavetypeService>();
-builder.Services.AddScoped< LeaveService>();
+builder.Services.AddScoped<ILeaveService, LeaveService>();
 builder.Services.AddScoped<DashboardService>();
-
+builder.Services.AddScoped<LeaveBalanceService>();
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
