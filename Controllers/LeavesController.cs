@@ -9,9 +9,9 @@ namespace LeaveManagement.Controllers
     [ApiController]
     public class LeavesController : ControllerBase
     {
-        private readonly LeaveService _leaveService;
+        private readonly ILeaveService _leaveService;
 
-        public LeavesController(LeaveService leaveService)
+        public LeavesController(ILeaveService leaveService)
         {
             _leaveService = leaveService;
         }
@@ -36,14 +36,13 @@ namespace LeaveManagement.Controllers
                 return BadRequest(ex.Message);
             }
         }
-
         [HttpGet]
         public async Task<IActionResult> GetAll(
-            [FromQuery] int? employeeId,
-            [FromQuery] int? leaveTypeId,
-            [FromQuery] string? status,
-            [FromQuery] DateTime? fromDate,
-            [FromQuery] DateTime? toDate)
+     [FromQuery] int? employeeId,
+     [FromQuery] int? leaveTypeId,
+     [FromQuery] string? status,
+     [FromQuery] DateTime? fromDate,
+     [FromQuery] DateTime? toDate)
         {
             var result = await _leaveService.GetAllLeavesAsync(
                 employeeId,
@@ -52,9 +51,10 @@ namespace LeaveManagement.Controllers
                 fromDate,
                 toDate);
 
+            
+
             return Ok(result);
         }
-
         [HttpGet("{id}")]
         public async Task<IActionResult> GetById(int id)
         {
@@ -62,8 +62,18 @@ namespace LeaveManagement.Controllers
 
             if (result == null)
                 return NotFound($"Leave request with ID {id} not found.");
-
-            return Ok(result);
+            LeaveRequestGetDTO leaverequest = new LeaveRequestGetDTO();
+            leaverequest.leaverequestid = result.leaverequestid;
+            leaverequest.employeeid = result.employeeid;
+            leaverequest.leavetypeid = result.leavetypeid;
+            leaverequest.fromdate = result.fromdate;
+            leaverequest.todate = result.todate;
+            leaverequest.reason = result.status;
+            leaverequest.status = result.status;
+            leaverequest.applieddate = result.applieddate;
+            leaverequest.approvedby = result.approvedby;
+            leaverequest.comments = result.comments;
+            return Ok(leaverequest);
         }
 
         [HttpGet("/api/employees/{employeeId}/leaves")]

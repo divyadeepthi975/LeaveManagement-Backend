@@ -28,10 +28,16 @@ namespace LeaveManagement.Services
             int rejectedRequests = await _db.Leaverequests
                 .CountAsync(l => l.status == "Rejected");
 
-            int totalLeavesTaken = await _db.Leaverequests
-                .Where(l => l.status == "Approved")
-                .SumAsync(l=>(l.todate - l.fromdate).Days + 1);
+                   var approvedLeaves = await _db.Leaverequests
+                    .Where(l => l.status == "Approved")
+                    .Select(l => new
+                    {
+                        l.fromdate,
+                        l.todate
+                    })
+                    .ToListAsync();
 
+                    var totalApprovedDays = approvedLeaves.Sum(l => (l.todate - l.fromdate).Days + 1);
             return new DashboardDTO
             {
                 TotalEmployees = totalEmployees,
@@ -39,7 +45,7 @@ namespace LeaveManagement.Services
                 PendingRequests = pendingRequests,
                 ApprovedRequests = approvedRequests,
                 RejectedRequests = rejectedRequests,
-                TotalLeavesTaken = totalLeavesTaken
+                TotalLeavesTaken = totalApprovedDays
             };
         }
     }

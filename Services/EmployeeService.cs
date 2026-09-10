@@ -15,7 +15,8 @@ namespace LeaveManagement.Services
 
         public async Task<Employee> AddAsync(EmployeeDTO employee)
         {
-            bool exists = await _db.Employees.AnyAsync(e => e.EmployeeCode == employee.EmployeeCode);
+            bool exists = await _db.Employees
+                .AnyAsync(e => e.EmployeeCode == employee.EmployeeCode);
 
             if (exists)
             {
@@ -23,6 +24,7 @@ namespace LeaveManagement.Services
             }
 
             Employee emp = new Employee();
+
             emp.EmployeeCode = employee.EmployeeCode;
             emp.Name = employee.Name;
             emp.Department = employee.Department;
@@ -30,7 +32,25 @@ namespace LeaveManagement.Services
             emp.JoiningDate = employee.JoiningDate;
 
             _db.Employees.Add(emp);
+
             await _db.SaveChangesAsync();
+
+            var leavetypes = await _db.Leavetypes.ToListAsync();
+
+            foreach (var leavetype in leavetypes)
+            {
+                Leavebalance leave = new Leavebalance();
+
+                leave.employeeid = emp.EmployeeId;
+                leave.leavetypeid = leavetype.leavetypeid;
+                leave.totaldays = leavetype.maximumdays;
+                leave.useddays = 0;
+
+                _db.Leavebalances.Add(leave);
+            }
+
+            await _db.SaveChangesAsync();
+
             return emp;
         }
 

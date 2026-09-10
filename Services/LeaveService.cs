@@ -132,6 +132,7 @@ namespace LeaveManagement.Services
             return await query
                 .OrderByDescending(l => l.applieddate)
                 .ToListAsync();
+
         }
 
         public async Task<IEnumerable<Leaverequest>> GetEmployeeLeavesAsync(
