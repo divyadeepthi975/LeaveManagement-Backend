@@ -41,12 +41,17 @@ namespace LeaveManagement.Services
 
         public async Task<IEnumerable<Leavetype>> GetAllLeavetypeAsync()
         {
-            return await _db.Leavetypes.ToListAsync();
+            return await _db.Leavetypes.Where(l=>l.IsActive==true).ToListAsync();
         }
 
         public async Task<Leavetype?> GetLeavetypeAsync(int id)
         {
-            return await _db.Leavetypes.FindAsync(id);
+            Leavetype? leavetype=await _db.Leavetypes.FindAsync(id);
+            if(leavetype == null ||  leavetype.IsActive == false)
+            {
+                return null;
+            }
+            return leavetype;
 
         }
 

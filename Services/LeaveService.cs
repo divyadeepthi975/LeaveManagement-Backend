@@ -20,7 +20,7 @@ namespace LeaveManagement.Services
                 .FirstOrDefaultAsync(e =>
                     e.EmployeeId == leaverequest.employeeid);
 
-            if (employee == null)
+            if (employee == null || employee.IsActive==false)
             {
                 throw new ArgumentException("Employee not found or inactive.");
             }
@@ -29,7 +29,7 @@ namespace LeaveManagement.Services
                 .FirstOrDefaultAsync(l =>
                     l.leavetypeid == leaverequest.leavetypeid);
 
-            if (leavetype == null)
+            if (leavetype == null || leavetype.IsActive==false)
             {
                 throw new ArgumentException("Leave type not found or inactive.");
             }
@@ -138,6 +138,7 @@ namespace LeaveManagement.Services
         public async Task<IEnumerable<Leaverequest>> GetEmployeeLeavesAsync(
             int employeeId)
         {
+
             return await _db.Leaverequests
                 .Where(l => l.employeeid == employeeId)
                 .OrderByDescending(l => l.applieddate)
