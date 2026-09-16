@@ -17,6 +17,7 @@ namespace LeaveManagement.Data
         public DbSet<Leaverequest> Leaverequests { get; set; }
 
         public DbSet<Leavebalance> Leavebalances { get; set; }
+        public DbSet<Loginusers> Loginuser { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -59,6 +60,16 @@ namespace LeaveManagement.Data
                     l.leavetypeid
                 })
                 .IsUnique();
+
+            modelBuilder.Entity<Loginusers>()
+                .HasOne(l => l.employee)
+                .WithOne()
+                .HasForeignKey<Loginusers>(l => l.employeeid)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<Loginusers>()
+            .HasIndex(l => l.username)
+            .IsUnique();
         }
     }
 }

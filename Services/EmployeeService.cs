@@ -1,6 +1,7 @@
 ﻿using LeaveManagement.Data;
 using LeaveManagement.DTO;
 using LeaveManagement.Models.Entities;
+using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.EntityFrameworkCore;
 
 namespace LeaveManagement.Services
@@ -54,27 +55,36 @@ namespace LeaveManagement.Services
             return emp;
         }
 
-        public async Task<bool> DeleteAsync(int id)
+        public async Task<string> DeleteAsync(int id)
         {
             var emp=await _db.Employees.FirstOrDefaultAsync(e=>e.EmployeeId==id);
             if (emp == null)
             {
-                return false ;
+                return "Employee with this ID not found" ;
             }
-            _db.Employees.Remove(emp);
+            if (emp.IsActive == false)
+            {
+                return "Employee is inactive or left";
+            }
+            emp.IsActive=false;
             await _db.SaveChangesAsync();
-            return true;
+            return "Employee deleted successfully";
         }
 
         public async Task<IEnumerable<Employee>> GetAllAsync()
         {
-            return await _db.Employees.ToListAsync();
+            return await _db.Employees.Where(e=>e.IsActive==true).ToListAsync();
         }
 
         public async Task<Employee?> GetByIdAsync(int id)
         {
-            return await _db.Employees.FindAsync(id);
+            Employee? emp= await _db.Employees.FindAsync(id);
+            if (emp==null || emp.IsActive == false) {
+                return null;
+            }
+            return emp;
         }
+
 
         public async Task<Employee?> UpdateAsync(Employee employee)
         {

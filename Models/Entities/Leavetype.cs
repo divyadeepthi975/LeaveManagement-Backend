@@ -11,5 +11,6 @@ namespace LeaveManagement.Models.Entities
         public string leavetypename { get; set; } = string.Empty;
         [Required]
         public int maximumdays {  get; set;}
+        public bool IsActive { get; set; } = true;
     }
 }

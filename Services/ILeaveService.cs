@@ -20,8 +20,8 @@ namespace LeaveManagement.Services
         Task<Leaverequest?> GetLeaveByIdAsync(
             int id);
 
-        Task<Leaverequest?> ApproveLeaveAsync(LeaveActionDTO leave);
+        Task<string?> ApproveLeaveAsync(LeaveActionDTO leave);
 
-        Task<Leaverequest?> RejectLeaveAsync(LeaveActionDTO leave);
+        Task<string?> RejectLeaveAsync(LeaveActionDTO leave);
     }
 }

@@ -67,16 +67,11 @@ namespace LeaveManagement.Controllers
         }
 
         [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteEmployee(int id)
+        public async Task<string> DeleteEmployee(int id)
         {
             var result = await _employeeService.DeleteAsync(id);
 
-            if (!result)
-            {
-                return NotFound();
-            }
-
-            return NoContent();
+            return result;
         }
     }
 }

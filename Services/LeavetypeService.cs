@@ -22,16 +22,21 @@ namespace LeaveManagement.Services
             return leave;
         }
 
-        public async Task<bool> DeleteAsync(int id)
+        public async Task<string> DeleteAsync(int id)
         {
             var objLeavetype = await _db.Leavetypes.FirstOrDefaultAsync(l => l.leavetypeid == id);
             if (objLeavetype == null)
             {
-                return false;
+                return "leavetype with this ID doesnt exists";
             }
+            if (objLeavetype.IsActive == false)
+            {
+                return "leavetype with this id is inactive";
+            }
+
             _db.Leavetypes.Remove(objLeavetype);
             await _db.SaveChangesAsync();
-            return true;
+            return $"leavetype with the id-{id} is successfully deleted";
         }
 
         public async Task<IEnumerable<Leavetype>> GetAllLeavetypeAsync()

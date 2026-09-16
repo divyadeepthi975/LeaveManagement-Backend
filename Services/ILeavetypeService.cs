@@ -7,7 +7,7 @@ namespace LeaveManagement.Services
     {
         Task<Leavetype> AddAsync(LeavetypeDTO leavetype);
 
-        Task<bool> DeleteAsync(int id);
+        Task<string> DeleteAsync(int id);
 
         Task<IEnumerable<Leavetype>> GetAllLeavetypeAsync();
 

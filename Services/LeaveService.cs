@@ -151,7 +151,7 @@ namespace LeaveManagement.Services
                     l.leaverequestid == id);
         }
 
-        public async Task<Leaverequest?> ApproveLeaveAsync(LeaveActionDTO leave)
+        public async Task<string?> ApproveLeaveAsync(LeaveActionDTO leave)
         {
             var leaveRequest = await _db.Leaverequests
                 .FirstOrDefaultAsync(l =>
@@ -196,10 +196,10 @@ namespace LeaveManagement.Services
 
             await _db.SaveChangesAsync();
 
-            return leaveRequest;
+            return "Your Leave is approved";
         }
 
-        public async Task<Leaverequest?> RejectLeaveAsync(LeaveActionDTO leave)
+        public async Task<string?> RejectLeaveAsync(LeaveActionDTO leave)
         {
             var leaveRequest = await _db.Leaverequests
                 .FirstOrDefaultAsync(l =>
@@ -217,12 +217,12 @@ namespace LeaveManagement.Services
             }
 
             leaveRequest.status = "Rejected";
-            leaveRequest.approvedby = leave.approvedby;
+            leaveRequest.approvedby = "Rejected";
             leaveRequest.comments = leave.comments;
 
             await _db.SaveChangesAsync();
 
-            return leaveRequest;
+            return "Your Leave is rejected";
         }
     }
 }

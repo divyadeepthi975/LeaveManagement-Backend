@@ -82,16 +82,10 @@ namespace LeaveManagement.Controllers
 
         // DELETE: api/Leavetypes/1
         [HttpDelete("{id}")]
-        public async Task<IActionResult> Delete(int id)
+        public async Task<string> Delete(int id)
         {
             var result = await _leavetypeService.DeleteAsync(id);
-
-            if (!result)
-            {
-                return NotFound($"Leave type with ID {id} not found.");
-            }
-
-            return NoContent();
+            return result;
         }
     }
 }

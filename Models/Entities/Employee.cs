@@ -27,5 +27,6 @@ namespace LeaveManagement.Models.Entities
 
         [Required]
         public DateTime JoiningDate { get; set; }
+        public bool IsActive { get; set; } = true;
     }
 }
