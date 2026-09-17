@@ -1,7 +1,6 @@
 ﻿using LeaveManagement.Data;
 using LeaveManagement.DTO;
 using LeaveManagement.Models.Entities;
-using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.EntityFrameworkCore;
 
 namespace LeaveManagement.Services
