@@ -35,7 +35,7 @@ namespace LeaveManagement.Services
 
             await _db.SaveChangesAsync();
 
-            var leavetypes = await _db.Leavetypes.ToListAsync();
+            var leavetypes = await _db.Leavetypes.Where(l=>l.IsActive==true).ToListAsync();
 
             foreach (var leavetype in leavetypes)
             {
@@ -72,20 +72,20 @@ namespace LeaveManagement.Services
 
         public async Task<IEnumerable<Employee>> GetAllAsync()
         {
-            return await _db.Employees.Where(e=>e.IsActive==true).ToListAsync();
+            return await _db.Employees.ToListAsync();
         }
 
         public async Task<Employee?> GetByIdAsync(int id)
         {
             Employee? emp= await _db.Employees.FindAsync(id);
-            if (emp==null || emp.IsActive == false) {
+            if (emp==null) {
                 return null;
             }
             return emp;
         }
 
 
-        public async Task<Employee?> UpdateAsync(Employee employee)
+        public async Task<Employee?> UpdateAsync(EmployeewithIDDTO employee)
         {
             var emp=await _db.Employees.FirstOrDefaultAsync(e => e.EmployeeId == employee.EmployeeId);
             if (emp == null)
@@ -98,6 +98,7 @@ namespace LeaveManagement.Services
             emp.Email= employee.Email;
             emp.Department= employee.Department;
             emp.JoiningDate= employee.JoiningDate;
+            emp.IsActive = employee.IsActive;
             await _db.SaveChangesAsync();
             return emp;
         }

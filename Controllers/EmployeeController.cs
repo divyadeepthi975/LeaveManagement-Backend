@@ -49,7 +49,7 @@ namespace LeaveManagement.Controllers
         }
 
         [HttpPut("{id}")]
-        public async Task<IActionResult> UpdateEmployee(int id, Employee employee)
+        public async Task<IActionResult> UpdateEmployee(int id, EmployeewithIDDTO employee)
         {
             if (id != employee.EmployeeId)
             {
@@ -60,7 +60,7 @@ namespace LeaveManagement.Controllers
 
             if (updatedEmployee == null)
             {
-                return NotFound();
+                return NotFound("Employee is inactive");
             }
 
             return Ok(updatedEmployee);

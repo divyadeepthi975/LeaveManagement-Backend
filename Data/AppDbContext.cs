@@ -40,6 +40,9 @@ namespace LeaveManagement.Data
                 .WithMany()
                 .HasForeignKey(l => l.leavetypeid)
                 .OnDelete(DeleteBehavior.Restrict);
+            modelBuilder.Entity<Leavetype>()
+                .HasIndex(l => l.leavetypename)
+                .IsUnique();
 
             modelBuilder.Entity<Leavebalance>()
                 .HasOne(l => l.Employee)

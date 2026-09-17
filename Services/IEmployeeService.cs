@@ -11,7 +11,7 @@ namespace LeaveManagement.Services
 
         Task<Employee?> GetByIdAsync(int id);
 
-        Task<Employee?> UpdateAsync(Employee employee);
+        Task<Employee?> UpdateAsync(EmployeewithIDDTO employee);
 
         Task<string> DeleteAsync(int id);
     }

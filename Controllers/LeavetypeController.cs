@@ -58,7 +58,7 @@ namespace LeaveManagement.Controllers
 
         // PUT: api/Leavetypes/1
         [HttpPut("{id}")]
-        public async Task<IActionResult> Update(int id, Leavetype leavetype)
+        public async Task<IActionResult> Update(int id, LeavetypeIsactiveDTO leavetype)
         {
             if (id != leavetype.leavetypeid)
             {
