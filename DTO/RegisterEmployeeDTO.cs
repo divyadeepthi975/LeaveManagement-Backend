@@ -1,13 +1,18 @@
 ﻿using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
 
-namespace LeaveManagement.Models.Entities
+namespace LeaveManagement.DTO
 {
-    public class Employee
+    public class RegisterEmployeeDTO
     {
-        [Key]
-        [ForeignKey("loginuser")]
-        public int EmployeeId { get; set; }
+        [Required]
+        [EmailAddress]
+        public string username { get; set; } = string.Empty;
+
+        [Required]
+        public string password { get; set; } = string.Empty;
+
+        [Required]
+        public string role { get; set; } = string.Empty;
 
         [Required]
         [StringLength(50)]
@@ -28,9 +33,5 @@ namespace LeaveManagement.Models.Entities
 
         [Required]
         public DateTime JoiningDate { get; set; }
-
-        public bool IsActive { get; set; } = true;
-
-        public Loginusers? loginuser { get; set; }
     }
 }

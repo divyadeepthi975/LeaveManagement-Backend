@@ -65,9 +65,13 @@ namespace LeaveManagement.Data
                 .IsUnique();
 
             modelBuilder.Entity<Loginusers>()
+            .HasKey(l => l.employeeid);
+
+            modelBuilder.Entity<Loginusers>()
                 .HasOne(l => l.employee)
-                .WithOne()
-                .HasForeignKey<Loginusers>(l => l.employeeid)
+                .WithOne(e => e.loginuser)
+                .HasForeignKey<Employee>(e => e.EmployeeId)
+                .HasPrincipalKey<Loginusers>(l => l.employeeid)
                 .OnDelete(DeleteBehavior.Restrict);
 
             modelBuilder.Entity<Loginusers>()

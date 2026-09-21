@@ -7,6 +7,6 @@ namespace LeaveManagement.DTO
         [Required]
         public string username { get; set; } = string.Empty;
         [Required]
-        public string passwordhash { get; set; } = string.Empty;
+        public string password {  get; set; }=string.Empty;
     }
 }
