@@ -12,6 +12,10 @@ namespace LeaveManagement.DTO
         public string password { get; set; } = string.Empty;
 
         [Required]
+        [RegularExpression(
+            "^(Manager|Employee)$",
+            ErrorMessage = "Role must be Manager or Employee."
+        )]
         public string role { get; set; } = string.Empty;
 
         [Required]

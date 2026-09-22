@@ -9,7 +9,7 @@ namespace LeaveManagement.Models.Entities
 
         [Required]
         [EmailAddress]
-        [StringLength(30)]
+        [StringLength(100)]
         public string username { get; set; } = string.Empty;
 
         [Required]

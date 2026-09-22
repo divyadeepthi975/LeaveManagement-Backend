@@ -102,5 +102,59 @@ namespace LeaveManagement.Services
             await _db.SaveChangesAsync();
             return emp;
         }
+        public async Task<Employee> AddWithIdAsync(EmployeeDTO employeeDTO,int employeeId)
+        {
+            bool codeExists = await _db.Employees
+                .AnyAsync(e =>
+                    e.EmployeeCode == employeeDTO.EmployeeCode);
+
+            if (codeExists)
+            {
+                throw new Exception("Employee code already exists.");
+            }
+
+            bool emailExists = await _db.Employees
+                .AnyAsync(e =>
+                    e.Email == employeeDTO.Email);
+
+            if (emailExists)
+            {
+                throw new Exception("Email already exists.");
+            }
+
+            var employee = new Employee
+            {
+                EmployeeId = employeeId,
+                EmployeeCode = employeeDTO.EmployeeCode,
+                Name = employeeDTO.Name,
+                Email = employeeDTO.Email,
+                Department = employeeDTO.Department,
+                JoiningDate = employeeDTO.JoiningDate,
+                IsActive = true
+            };
+
+            _db.Employees.Add(employee);
+
+            await _db.SaveChangesAsync();
+
+            var leaveTypes = await _db.Leavetypes.ToListAsync();
+
+            foreach (var leaveType in leaveTypes)
+            {
+                var leaveBalance = new Leavebalance
+                {
+                    employeeid = employeeId,
+                    leavetypeid = leaveType.leavetypeid,
+                    totaldays = leaveType.maximumdays,
+                    useddays = 0
+                };
+
+                _db.Leavebalances.Add(leaveBalance);
+            }
+
+            await _db.SaveChangesAsync();
+
+            return employee;
+        }
     }
 }

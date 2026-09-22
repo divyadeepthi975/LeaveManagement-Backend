@@ -1,9 +1,10 @@
-﻿namespace LeaveManagement.Models.DTOs
+﻿namespace LeaveManagement.DTO
 {
     public class LoginResponseDTO
     {
-        public string employeecode { get; set; } = string.Empty;
         public string token { get; set; } = string.Empty;
+
+        public int employeeid { get; set; }
 
         public string username { get; set; } = string.Empty;
 

@@ -22,13 +22,12 @@ namespace LeaveManagement.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
+            modelBuilder.HasSequence<int>("EmployeeIdSequence");
+
             modelBuilder.Entity("LeaveManagement.Models.Entities.Employee", b =>
                 {
                     b.Property<int>("EmployeeId")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("EmployeeId"));
 
                     b.Property<string>("Department")
                         .IsRequired()
@@ -172,14 +171,11 @@ namespace LeaveManagement.Migrations
 
             modelBuilder.Entity("LeaveManagement.Models.Entities.Loginusers", b =>
                 {
-                    b.Property<int>("loginuserid")
+                    b.Property<int>("employeeid")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("loginuserid"));
-
-                    b.Property<int>("employeeid")
-                        .HasColumnType("int");
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("employeeid"));
 
                     b.Property<string>("passwordhash")
                         .IsRequired()
@@ -191,18 +187,26 @@ namespace LeaveManagement.Migrations
 
                     b.Property<string>("username")
                         .IsRequired()
-                        .HasMaxLength(30)
-                        .HasColumnType("nvarchar(30)");
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
 
-                    b.HasKey("loginuserid");
-
-                    b.HasIndex("employeeid")
-                        .IsUnique();
+                    b.HasKey("employeeid");
 
                     b.HasIndex("username")
                         .IsUnique();
 
                     b.ToTable("Loginuser");
+                });
+
+            modelBuilder.Entity("LeaveManagement.Models.Entities.Employee", b =>
+                {
+                    b.HasOne("LeaveManagement.Models.Entities.Loginusers", "loginuser")
+                        .WithOne("employee")
+                        .HasForeignKey("LeaveManagement.Models.Entities.Employee", "EmployeeId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("loginuser");
                 });
 
             modelBuilder.Entity("LeaveManagement.Models.Entities.Leavebalance", b =>
@@ -245,12 +249,6 @@ namespace LeaveManagement.Migrations
 
             modelBuilder.Entity("LeaveManagement.Models.Entities.Loginusers", b =>
                 {
-                    b.HasOne("LeaveManagement.Models.Entities.Employee", "employee")
-                        .WithOne()
-                        .HasForeignKey("LeaveManagement.Models.Entities.Loginusers", "employeeid")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
                     b.Navigation("employee");
                 });
 #pragma warning restore 612, 618

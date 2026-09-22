@@ -1,39 +1,36 @@
 ﻿using LeaveManagement.DTO;
 using LeaveManagement.Services;
-using Microsoft.AspNetCore.Authorization;
+
 using Microsoft.AspNetCore.Mvc;
 
 namespace LeaveManagement.Controllers
 {
-    [Route("api/[controller]")]
     [ApiController]
-    public class LoginusersController : ControllerBase
+    [Route("api/[controller]")]
+    public class LoginController : ControllerBase
     {
         private readonly ILoginService _loginService;
 
-        public LoginusersController(ILoginService loginService)
+        public LoginController(ILoginService loginService)
         {
             _loginService = loginService;
         }
 
-        // Register a new login user
         [HttpPost("register")]
-        [AllowAnonymous]
-        public async Task<IActionResult> Register(
-            [FromBody] RegisterDTO registerDTO)
+        public async Task<IActionResult> Register([FromBody] RegisterEmployeeDTO registerDTO)
         {
-            var result = await _loginService.RegisterAsync(registerDTO);
+            var result =
+                await _loginService.RegisterEmployeeAsync(
+                    registerDTO);
 
             return Ok(result);
         }
 
-        // Login and generate JWT token
         [HttpPost("login")]
-        [AllowAnonymous]
-        public async Task<IActionResult> Login(
-            [FromBody] LoginDTO loginDTO)
+        public async Task<IActionResult> Login([FromBody] LoginDTO loginDTO)
         {
-            var result = await _loginService.LoginAsync(loginDTO);
+            var result =
+                await _loginService.LoginAsync(loginDTO);
 
             return Ok(result);
         }

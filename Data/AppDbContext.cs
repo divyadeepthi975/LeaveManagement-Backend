@@ -77,6 +77,14 @@ namespace LeaveManagement.Data
             modelBuilder.Entity<Loginusers>()
             .HasIndex(l => l.username)
             .IsUnique();
+
+            modelBuilder.HasSequence<int>("EmployeeIdSequence")
+            .StartsAt(1)
+            .IncrementsBy(1);
+
+            modelBuilder.Entity<Employee>()
+            .Property(e => e.EmployeeId)
+            .ValueGeneratedNever();
         }
     }
 }

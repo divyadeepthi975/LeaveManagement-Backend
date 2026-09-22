@@ -6,11 +6,14 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace LeaveManagement.Migrations
 {
     /// <inheritdoc />
-    public partial class leavetype_leaverequest_leavebalance_tables_created : Migration
+    public partial class initialcreate : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
+            migrationBuilder.CreateSequence<int>(
+                name: "EmployeeIdSequence");
+
             migrationBuilder.CreateTable(
                 name: "Leavetypes",
                 columns: table => new
@@ -18,11 +21,50 @@ namespace LeaveManagement.Migrations
                     leavetypeid = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
                     leavetypename = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: false),
-                    maximumdays = table.Column<int>(type: "int", nullable: false)
+                    maximumdays = table.Column<int>(type: "int", nullable: false),
+                    IsActive = table.Column<bool>(type: "bit", nullable: false)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Leavetypes", x => x.leavetypeid);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Loginuser",
+                columns: table => new
+                {
+                    employeeid = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    username = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
+                    passwordhash = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    role = table.Column<string>(type: "nvarchar(max)", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Loginuser", x => x.employeeid);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Employees",
+                columns: table => new
+                {
+                    EmployeeId = table.Column<int>(type: "int", nullable: false),
+                    EmployeeCode = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
+                    Name = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
+                    Email = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
+                    Department = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
+                    JoiningDate = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    IsActive = table.Column<bool>(type: "bit", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Employees", x => x.EmployeeId);
+                    table.ForeignKey(
+                        name: "FK_Employees_Loginuser_EmployeeId",
+                        column: x => x.EmployeeId,
+                        principalTable: "Loginuser",
+                        principalColumn: "employeeid",
+                        onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateTable(
@@ -87,6 +129,18 @@ namespace LeaveManagement.Migrations
                 });
 
             migrationBuilder.CreateIndex(
+                name: "IX_Employees_Email",
+                table: "Employees",
+                column: "Email",
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Employees_EmployeeCode",
+                table: "Employees",
+                column: "EmployeeCode",
+                unique: true);
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Leavebalances_employeeid_leavetypeid",
                 table: "Leavebalances",
                 columns: new[] { "employeeid", "leavetypeid" },
@@ -106,6 +160,18 @@ namespace LeaveManagement.Migrations
                 name: "IX_Leaverequests_leavetypeid",
                 table: "Leaverequests",
                 column: "leavetypeid");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Leavetypes_leavetypename",
+                table: "Leavetypes",
+                column: "leavetypename",
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Loginuser_username",
+                table: "Loginuser",
+                column: "username",
+                unique: true);
         }
 
         /// <inheritdoc />
@@ -118,7 +184,16 @@ namespace LeaveManagement.Migrations
                 name: "Leaverequests");
 
             migrationBuilder.DropTable(
+                name: "Employees");
+
+            migrationBuilder.DropTable(
                 name: "Leavetypes");
+
+            migrationBuilder.DropTable(
+                name: "Loginuser");
+
+            migrationBuilder.DropSequence(
+                name: "EmployeeIdSequence");
         }
     }
 }
