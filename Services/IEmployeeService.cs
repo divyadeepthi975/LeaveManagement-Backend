@@ -1,22 +1,20 @@
 ﻿using LeaveManagement.DTO;
 using LeaveManagement.Models.Entities;
 
-namespace LeaveManagement.Services
+public interface IEmployeeService
 {
-    public interface IEmployeeService
-    {
-        Task<Employee> AddAsync(EmployeeDTO employee);
+    Task<Employee> AddAsync(EmployeeDTO employee);
 
-        Task<IEnumerable<Employee>> GetAllAsync();
+    Task<string> DeleteAsync(int id);
 
-        Task<Employee?> GetByIdAsync(int id);
+    Task<IEnumerable<EmployeewithIDDTO>> GetAllAsync();
 
-        Task<Employee?> UpdateAsync(EmployeewithIDDTO employee);
+    Task<EmployeewithIDDTO?> GetByIdAsync(int id);
 
-        Task<string> DeleteAsync(int id);
+    Task<EmployeewithIDDTO?> UpdateAsync(
+        EmployeewithIDDTO employee);
 
-        Task<Employee> AddWithIdAsync(
-            EmployeeDTO employeeDTO,
-            int employeeId);
-    }
+    Task<Employee> AddWithIdAsync(
+        EmployeeDTO employeeDTO,
+        int employeeId);
 }

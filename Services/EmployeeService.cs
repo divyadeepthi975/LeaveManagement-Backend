@@ -7,44 +7,64 @@ namespace LeaveManagement.Services
 {
     public class EmployeeService : IEmployeeService
     {
-        private readonly AppDbContext _db ;
+        private readonly AppDbContext _db;
+
         public EmployeeService(AppDbContext db)
         {
             _db = db;
         }
 
+        // CREATE EMPLOYEE
         public async Task<Employee> AddAsync(EmployeeDTO employee)
         {
             bool exists = await _db.Employees
-                .AnyAsync(e => e.EmployeeCode == employee.EmployeeCode);
+                .AnyAsync(e =>
+                    e.EmployeeCode == employee.EmployeeCode);
 
             if (exists)
             {
-                throw new Exception("Employee code already exists.");
+                throw new Exception(
+                    "Employee code already exists.");
             }
 
-            Employee emp = new Employee();
+            bool emailExists = await _db.Employees
+                .AnyAsync(e =>
+                    e.Email == employee.Email);
 
-            emp.EmployeeCode = employee.EmployeeCode;
-            emp.Name = employee.Name;
-            emp.Department = employee.Department;
-            emp.Email = employee.Email;
-            emp.JoiningDate = employee.JoiningDate;
+            if (emailExists)
+            {
+                throw new Exception(
+                    "Email already exists.");
+            }
+
+            Employee emp = new Employee
+            {
+                EmployeeCode = employee.EmployeeCode,
+                Name = employee.Name,
+                Department = employee.Department,
+                Email = employee.Email,
+                JoiningDate = employee.JoiningDate,
+                IsActive = true
+                
+            };
 
             _db.Employees.Add(emp);
 
             await _db.SaveChangesAsync();
 
-            var leavetypes = await _db.Leavetypes.Where(l=>l.IsActive==true).ToListAsync();
+            var leavetypes = await _db.Leavetypes
+                .Where(l => l.IsActive == true)
+                .ToListAsync();
 
             foreach (var leavetype in leavetypes)
             {
-                Leavebalance leave = new Leavebalance();
-
-                leave.employeeid = emp.EmployeeId;
-                leave.leavetypeid = leavetype.leavetypeid;
-                leave.totaldays = leavetype.maximumdays;
-                leave.useddays = 0;
+                Leavebalance leave = new Leavebalance
+                {
+                    employeeid = emp.EmployeeId,
+                    leavetypeid = leavetype.leavetypeid,
+                    totaldays = leavetype.maximumdays,
+                    useddays = 0
+                };
 
                 _db.Leavebalances.Add(leave);
             }
@@ -54,55 +74,118 @@ namespace LeaveManagement.Services
             return emp;
         }
 
+
+        // DELETE / SOFT DELETE EMPLOYEE
         public async Task<string> DeleteAsync(int id)
         {
-            var emp=await _db.Employees.FirstOrDefaultAsync(e=>e.EmployeeId==id);
+            var emp = await _db.Employees
+                .FirstOrDefaultAsync(e =>
+                    e.EmployeeId == id);
+
             if (emp == null)
             {
-                return "Employee with this ID not found" ;
+                return "Employee with this ID not found";
             }
+
             if (emp.IsActive == false)
             {
                 return "Employee is inactive or left";
             }
-            emp.IsActive=false;
+
+            emp.IsActive = false;
+
             await _db.SaveChangesAsync();
+
             return "Employee deleted successfully";
         }
 
-        public async Task<IEnumerable<Employee>> GetAllAsync()
+
+        // GET ALL EMPLOYEES
+        public async Task<IEnumerable<EmployeewithIDDTO>> GetAllAsync()
         {
-            return await _db.Employees.ToListAsync();
+            return await _db.Employees
+                .Select(e => new EmployeewithIDDTO
+                {
+                    EmployeeId = e.EmployeeId,
+                    EmployeeCode = e.EmployeeCode,
+                    Name = e.Name,
+                    Email = e.Email,
+                    Department = e.Department,
+                    JoiningDate = e.JoiningDate,
+                    IsActive = e.IsActive,
+                    role = e.loginuser.role
+                })
+                .ToListAsync();
         }
 
-        public async Task<Employee?> GetByIdAsync(int id)
+
+        // GET EMPLOYEE BY ID
+        public async Task<EmployeewithIDDTO?> GetByIdAsync(int id)
         {
-            Employee? emp= await _db.Employees.FindAsync(id);
-            if (emp==null) {
-                return null;
-            }
-            return emp;
+            return await _db.Employees
+                .Where(e => e.EmployeeId == id)
+                .Select(e => new EmployeewithIDDTO
+                {
+                    EmployeeId = e.EmployeeId,
+                    EmployeeCode = e.EmployeeCode,
+                    Name = e.Name,
+                    Email = e.Email,
+                    Department = e.Department,
+                    JoiningDate = e.JoiningDate,
+                    IsActive = e.IsActive,
+                    role = e.loginuser.role
+                })
+                .FirstOrDefaultAsync();
         }
 
 
-        public async Task<Employee?> UpdateAsync(EmployeewithIDDTO employee)
+        // UPDATE EMPLOYEE
+        public async Task<EmployeewithIDDTO?> UpdateAsync(
+            EmployeewithIDDTO employee)
         {
-            var emp=await _db.Employees.FirstOrDefaultAsync(e => e.EmployeeId == employee.EmployeeId);
+            var emp = await _db.Employees
+                .FirstOrDefaultAsync(e =>
+                    e.EmployeeId == employee.EmployeeId);
+
             if (emp == null)
             {
                 return null;
             }
-            emp.EmployeeId= employee.EmployeeId;
-            emp.EmployeeCode= employee.EmployeeCode;
-            emp.Name= employee.Name;
-            emp.Email= employee.Email;
-            emp.Department= employee.Department;
-            emp.JoiningDate= employee.JoiningDate;
+            var loginuser=await _db.Loginuser.FirstOrDefaultAsync(l=>l.employeeid == employee.EmployeeId);
+
+            // Don't update EmployeeId.
+            // It is the primary key.
+
+            emp.EmployeeCode = employee.EmployeeCode;
+            emp.Name = employee.Name;
+            emp.Email = employee.Email;
+            emp.Department = employee.Department;
+            emp.JoiningDate = employee.JoiningDate;
             emp.IsActive = employee.IsActive;
+            loginuser.username = employee.Email;
+            emp.loginuser = loginuser;
+
             await _db.SaveChangesAsync();
-            return emp;
+
+            return new EmployeewithIDDTO
+            {
+                EmployeeId = emp.EmployeeId,
+                EmployeeCode = emp.EmployeeCode,
+                Name = emp.Name,
+                Email = emp.Email,
+                Department = emp.Department,
+                JoiningDate = emp.JoiningDate,
+                IsActive = emp.IsActive,
+                role = emp.loginuser.role
+            };
         }
-        public async Task<Employee> AddWithIdAsync(EmployeeDTO employeeDTO,int employeeId)
+
+
+        // CREATE EMPLOYEE WITH EXISTING ID
+        // Used when Loginusers is created first.
+        public async Task<Employee> AddWithIdAsync(
+            EmployeeDTO employeeDTO,
+            int employeeId)
         {
             bool codeExists = await _db.Employees
                 .AnyAsync(e =>
@@ -110,7 +193,8 @@ namespace LeaveManagement.Services
 
             if (codeExists)
             {
-                throw new Exception("Employee code already exists.");
+                throw new Exception(
+                    "Employee code already exists.");
             }
 
             bool emailExists = await _db.Employees
@@ -119,7 +203,8 @@ namespace LeaveManagement.Services
 
             if (emailExists)
             {
-                throw new Exception("Email already exists.");
+                throw new Exception(
+                    "Email already exists.");
             }
 
             var employee = new Employee
@@ -130,14 +215,17 @@ namespace LeaveManagement.Services
                 Email = employeeDTO.Email,
                 Department = employeeDTO.Department,
                 JoiningDate = employeeDTO.JoiningDate,
-                IsActive = true
+                IsActive = true,
+                loginuser = employeeDTO.loginuser
             };
 
             _db.Employees.Add(employee);
 
             await _db.SaveChangesAsync();
 
-            var leaveTypes = await _db.Leavetypes.ToListAsync();
+            var leaveTypes = await _db.Leavetypes
+                .Where(l => l.IsActive == true)
+                .ToListAsync();
 
             foreach (var leaveType in leaveTypes)
             {

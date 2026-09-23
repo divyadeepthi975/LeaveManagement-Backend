@@ -1,6 +1,6 @@
 ﻿using LeaveManagement.DTO;
 using LeaveManagement.Services;
-
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace LeaveManagement.Controllers
@@ -15,7 +15,7 @@ namespace LeaveManagement.Controllers
         {
             _loginService = loginService;
         }
-
+        [AllowAnonymous]
         [HttpPost("register")]
         public async Task<IActionResult> Register([FromBody] RegisterEmployeeDTO registerDTO)
         {
@@ -25,7 +25,7 @@ namespace LeaveManagement.Controllers
 
             return Ok(result);
         }
-
+        [AllowAnonymous]
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] LoginDTO loginDTO)
         {

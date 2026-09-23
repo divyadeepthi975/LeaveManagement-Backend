@@ -1,10 +1,13 @@
-﻿using LeaveManagement.DTO;
-using LeaveManagement.Models.Entities;
+﻿
+using LeaveManagement.DTO;
 using LeaveManagement.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 
 namespace LeaveManagement.Controllers
 {
+    [Authorize]
     [Route("api/[controller]")]
     [ApiController]
     public class LeavesController : ControllerBase
@@ -16,15 +19,50 @@ namespace LeaveManagement.Controllers
             _leaveService = leaveService;
         }
 
+
+        // POST: api/Leaves
+        // Employee can apply for leave
         [HttpPost]
-        public async Task<IActionResult> ApplyLeave([FromBody] LeaverequestDTO leaverequest)
+        public async Task<IActionResult> ApplyLeave(
+            [FromBody] LeaverequestDTO leaverequest)
         {
+            if (!User.IsInRole("Employee"))
+            {
+                return StatusCode(
+                    403,
+                    "Only Employees are authorized to apply for leave.");
+            }
+
             if (!ModelState.IsValid)
+            {
                 return BadRequest(ModelState);
+            }
+
+            // Get logged-in employee ID from JWT
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+            if (userId == null)
+            {
+                return Unauthorized("You are not authenticated.");
+            }
+
+            if (!int.TryParse(userId, out int employeeId))
+            {
+                return Unauthorized("Invalid employee information.");
+            }
+
+            // Employee can apply leave only for themselves
+            if (employeeId != leaverequest.employeeid)
+            {
+                return StatusCode(
+                    403,
+                    "Employees can apply for leave only for themselves.");
+            }
 
             try
             {
-                var result = await _leaveService.ApplyLeaveAsync(leaverequest);
+                var result =
+                    await _leaveService.ApplyLeaveAsync(leaverequest);
 
                 return CreatedAtAction(
                     nameof(GetById),
@@ -36,66 +74,202 @@ namespace LeaveManagement.Controllers
                 return BadRequest(ex.Message);
             }
         }
+
+
+        // GET: api/Leaves
+        // Manager can view all leaves
         [HttpGet]
         public async Task<IActionResult> GetAll(
-     [FromQuery] int? employeeId,
-     [FromQuery] int? leaveTypeId,
-     [FromQuery] string? status,
-     [FromQuery] DateTime? fromDate,
-     [FromQuery] DateTime? toDate)
+            [FromQuery] int? employeeId,
+            [FromQuery] int? leaveTypeId,
+            [FromQuery] string? status,
+            [FromQuery] DateTime? fromDate,
+            [FromQuery] DateTime? toDate)
         {
-            var result = await _leaveService.GetAllLeavesAsync(
-                employeeId,
-                leaveTypeId,
-                status,
-                fromDate,
-                toDate);
+            if (!User.IsInRole("Manager"))
+            {
+                return StatusCode(
+                    403,
+                    "Only Managers are authorized to view all leave requests.");
+            }
 
-            
+            var result =
+                await _leaveService.GetAllLeavesAsync(
+                    employeeId,
+                    leaveTypeId,
+                    status,
+                    fromDate,
+                    toDate);
 
             return Ok(result);
         }
+
+
+        // GET: api/Leaves/{id}
+        // Manager can view any leave
+        // Employee can view only their own leave
         [HttpGet("{id}")]
         public async Task<IActionResult> GetById(int id)
         {
-            var result = await _leaveService.GetLeaveByIdAsync(id);
+            var userId =
+                User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+            if (userId == null)
+            {
+                return Unauthorized("You are not authenticated.");
+            }
+
+            if (!int.TryParse(userId, out int employeeId))
+            {
+                return Unauthorized("Invalid employee information.");
+            }
+
+            var result =
+                await _leaveService.GetLeaveByIdAsync(id);
 
             if (result == null)
-                return NotFound($"Leave request with ID {id} not found.");
-            LeaveRequestGetDTO leaverequest = new LeaveRequestGetDTO();
-            leaverequest.leaverequestid = result.leaverequestid;
-            leaverequest.employeeid = result.employeeid;
-            leaverequest.leavetypeid = result.leavetypeid;
-            leaverequest.fromdate = result.fromdate;
-            leaverequest.todate = result.todate;
-            leaverequest.reason = result.status;
-            leaverequest.status = result.status;
-            leaverequest.applieddate = result.applieddate;
-            leaverequest.approvedby = result.approvedby;
-            leaverequest.comments = result.comments;
+            {
+                return NotFound(
+                    $"Leave request with ID {id} not found.");
+            }
+
+            // Employee can only view their own leave
+            if (User.IsInRole("Employee") &&
+                result.employeeid != employeeId)
+            {
+                return StatusCode(
+                    403,
+                    "Employees can view only their own leave requests.");
+            }
+
+            // Only Manager or Employee can access this API
+            if (!User.IsInRole("Manager") &&
+                !User.IsInRole("Employee"))
+            {
+                return StatusCode(
+                    403,
+                    "You are not authorized to view this leave request.");
+            }
+
+            LeaveRequestGetDTO leaverequest =
+                new LeaveRequestGetDTO();
+
+            leaverequest.leaverequestid =
+                result.leaverequestid;
+
+            leaverequest.employeeid =
+                result.employeeid;
+
+            leaverequest.leavetypeid =
+                result.leavetypeid;
+
+            leaverequest.fromdate =
+                result.fromdate;
+
+            leaverequest.todate =
+                result.todate;
+
+            // Fixed: reason should come from result.reason
+            leaverequest.reason =
+                result.reason;
+
+            leaverequest.status =
+                result.status;
+
+            leaverequest.applieddate =
+                result.applieddate;
+
+            leaverequest.approvedby =
+                result.approvedby;
+
+            leaverequest.comments =
+                result.comments;
+
             return Ok(leaverequest);
         }
 
+
+        // GET: /api/employees/{employeeId}/leaves
+        // Manager can view any employee's leaves
+        // Employee can view only their own leaves
         [HttpGet("/api/employees/{employeeId}/leaves")]
-        public async Task<IActionResult> GetEmployeeLeaves(int employeeId)
+        public async Task<IActionResult> GetEmployeeLeaves(
+            int employeeId)
         {
-            var result = await _leaveService.GetEmployeeLeavesAsync(employeeId);
+            var userId =
+                User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+            if (userId == null)
+            {
+                return Unauthorized("You are not authenticated.");
+            }
+
+            if (!int.TryParse(userId, out int loggedInEmployeeId))
+            {
+                return Unauthorized("Invalid employee information.");
+            }
+
+            if (!User.IsInRole("Manager") &&
+                !User.IsInRole("Employee"))
+            {
+                return StatusCode(
+                    403,
+                    "You are not authorized to view employee leave requests.");
+            }
+
+            // Employee can only view their own leaves
+            if (User.IsInRole("Employee") &&
+                loggedInEmployeeId != employeeId)
+            {
+                return StatusCode(
+                    403,
+                    "Employees can view only their own leave requests.");
+            }
+
+            var result =
+                await _leaveService.GetEmployeeLeavesAsync(
+                    employeeId);
 
             return Ok(result);
         }
 
+
+        // PUT: api/Leaves/{id}/approve
+        // Only Manager can approve leave
         [HttpPut("{id}/approve")]
-        public async Task<IActionResult> Approve(int id, [FromBody]LeaveActionDTO leave)
+        public async Task<IActionResult> Approve(
+            int id,
+            [FromBody] LeaveActionDTO leave)
         {
+            if (!User.IsInRole("Manager"))
+            {
+                return StatusCode(
+                    403,
+                    "Only Managers are authorized to approve leave requests.");
+            }
+
             if (!ModelState.IsValid)
+            {
                 return BadRequest(ModelState);
+            }
+
+            // Make sure URL ID and body ID match
+            if (id != leave.id)
+            {
+                return BadRequest(
+                    "Leave request ID in URL and request body do not match.");
+            }
 
             try
             {
-                var result = await _leaveService.ApproveLeaveAsync(leave);
+                var result =
+                    await _leaveService.ApproveLeaveAsync(leave);
 
                 if (result == null)
-                    return NotFound($"Leave request with ID {leave.id} not found.");
+                {
+                    return NotFound(
+                        $"Leave request with ID {id} not found.");
+                }
 
                 return Ok(result);
             }
@@ -105,18 +279,43 @@ namespace LeaveManagement.Controllers
             }
         }
 
+
+        // PUT: api/Leaves/{id}/reject
+        // Only Manager can reject leave
         [HttpPut("{id}/reject")]
-        public async Task<IActionResult> Reject(int id, [FromBody] LeaveActionDTO leave)
+        public async Task<IActionResult> Reject(
+            int id,
+            [FromBody] LeaveActionDTO leave)
         {
+            if (!User.IsInRole("Manager"))
+            {
+                return StatusCode(
+                    403,
+                    "Only Managers are authorized to reject leave requests.");
+            }
+
             if (!ModelState.IsValid)
+            {
                 return BadRequest(ModelState);
+            }
+
+            // Make sure URL ID and body ID match
+            if (id != leave.id)
+            {
+                return BadRequest(
+                    "Leave request ID in URL and request body do not match.");
+            }
 
             try
             {
-                var result = await _leaveService.RejectLeaveAsync(leave);
+                var result =
+                    await _leaveService.RejectLeaveAsync(leave);
 
                 if (result == null)
-                    return NotFound($"Leave request with ID {id} not found.");
+                {
+                    return NotFound(
+                        $"Leave request with ID {id} not found.");
+                }
 
                 return Ok(result);
             }

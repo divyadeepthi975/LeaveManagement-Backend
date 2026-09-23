@@ -14,7 +14,7 @@ namespace LeaveManagement.Services
             _db = db;
         }
 
-        public async Task<Leaverequest?> ApplyLeaveAsync(LeaverequestDTO leaverequest)
+        public async Task<LeaveRequestGetDTO?> ApplyLeaveAsync(LeaverequestDTO leaverequest)
         {
             var employee = await _db.Employees
                 .FirstOrDefaultAsync(e =>
@@ -87,7 +87,7 @@ namespace LeaveManagement.Services
 
             await _db.SaveChangesAsync();
 
-            return leave;
+            return MapToDTO(leave);
         }
 
         public async Task<IEnumerable<Leaverequest>> GetAllLeavesAsync(
@@ -135,21 +135,28 @@ namespace LeaveManagement.Services
 
         }
 
-        public async Task<IEnumerable<Leaverequest>> GetEmployeeLeavesAsync(
-            int employeeId)
+        public async Task<IEnumerable<LeaveRequestGetDTO>>GetEmployeeLeavesAsync(int employeeId)
         {
-
-            return await _db.Leaverequests
+            var leaves = await _db.Leaverequests
                 .Where(l => l.employeeid == employeeId)
                 .OrderByDescending(l => l.applieddate)
                 .ToListAsync();
+
+            return leaves.Select(MapToDTO).ToList();
         }
 
-        public async Task<Leaverequest?> GetLeaveByIdAsync(int id)
+        public async Task<LeaveRequestGetDTO?> GetLeaveByIdAsync(int id)
         {
-            return await _db.Leaverequests
+            var leave = await _db.Leaverequests
                 .FirstOrDefaultAsync(l =>
                     l.leaverequestid == id);
+
+            if (leave == null)
+            {
+                return null;
+            }
+
+            return MapToDTO(leave);
         }
 
         public async Task<string?> ApproveLeaveAsync(LeaveActionDTO leave)
@@ -224,6 +231,22 @@ namespace LeaveManagement.Services
             await _db.SaveChangesAsync();
 
             return "Your Leave is rejected";
+        }
+        private LeaveRequestGetDTO MapToDTO(Leaverequest leave)
+        {
+            return new LeaveRequestGetDTO
+            {
+                leaverequestid = leave.leaverequestid,
+                employeeid = leave.employeeid,
+                leavetypeid = leave.leavetypeid,
+                fromdate = leave.fromdate,
+                todate = leave.todate,
+                reason = leave.reason,
+                status = leave.status,
+                applieddate = leave.applieddate,
+                approvedby = leave.approvedby,
+                comments = leave.comments
+            };
         }
     }
 }

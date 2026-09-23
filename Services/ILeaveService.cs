@@ -5,7 +5,8 @@ namespace LeaveManagement.Services
 {
     public interface ILeaveService
     {
-        Task<Leaverequest?> ApplyLeaveAsync(LeaverequestDTO leaverequest);
+        Task<LeaveRequestGetDTO?> ApplyLeaveAsync(
+     LeaverequestDTO leaverequest);
 
         Task<IEnumerable<Leaverequest>> GetAllLeavesAsync(
             int? employeeId = null,
@@ -14,11 +15,10 @@ namespace LeaveManagement.Services
             DateTime? fromDate = null,
             DateTime? toDate = null);
 
-        Task<IEnumerable<Leaverequest>> GetEmployeeLeavesAsync(
+        Task<IEnumerable<LeaveRequestGetDTO>> GetEmployeeLeavesAsync(
             int employeeId);
 
-        Task<Leaverequest?> GetLeaveByIdAsync(
-            int id);
+        Task<LeaveRequestGetDTO?> GetLeaveByIdAsync(int id);
 
         Task<string?> ApproveLeaveAsync(LeaveActionDTO leave);
 

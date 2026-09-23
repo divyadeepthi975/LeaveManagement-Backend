@@ -1,14 +1,12 @@
-﻿using System.IdentityModel.Tokens.Jwt;
-using System.Security.Claims;
-using System.Text;
-
-using LeaveManagement.Data;
+﻿using LeaveManagement.Data;
 using LeaveManagement.DTO;
 using LeaveManagement.Models.Entities;
-
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
 using Microsoft.IdentityModel.Tokens;
+using System.Text;
 
 namespace LeaveManagement.Services
 {
@@ -37,9 +35,9 @@ namespace LeaveManagement.Services
         public async Task<LoginResponseDTO> RegisterEmployeeAsync(
             RegisterEmployeeDTO registerDTO)
         {
-            string role = registerDTO.role.Trim().ToLower();
+            string role = registerDTO.role.Trim();
 
-            if (role != "manager" && role != "employee")
+            if (role != "Manager" && role != "Employee")
             {
                 throw new Exception(
                     "Role must be Manager or Employee.");
@@ -55,17 +53,14 @@ namespace LeaveManagement.Services
                     "Username already exists.");
             }
 
-            int employeeId = await GetNextEmployeeIdAsync();
-
             await using var transaction =
-                await _db.Database.BeginTransactionAsync();
+      await _db.Database.BeginTransactionAsync();
 
             try
             {
-                // 1. Create Loginusers record first
+                // 1. Create Loginusers
                 var loginUser = new Loginusers
                 {
-                    employeeid = employeeId,
                     username = registerDTO.username,
                     role = role
                 };
@@ -79,25 +74,28 @@ namespace LeaveManagement.Services
 
                 await _db.SaveChangesAsync();
 
-                // 2. Prepare employee DTO
+                // 2. SQL Server generated the ID
+                int employeeId = loginUser.employeeid;
+
+                // 3. Create Employee with the SAME ID
                 var employeeDTO = new EmployeeDTO
                 {
                     EmployeeCode = registerDTO.EmployeeCode,
                     Name = registerDTO.Name,
                     Email = registerDTO.Email,
                     Department = registerDTO.Department,
-                    JoiningDate = registerDTO.JoiningDate
+                    JoiningDate = registerDTO.JoiningDate,
+                    loginuser=loginUser                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             
                 };
 
-                // 3. Create Employee using EmployeeService
                 await _employeeService.AddWithIdAsync(
                     employeeDTO,
                     employeeId);
 
-                // 4. Commit both records
+                // 4. Commit
                 await transaction.CommitAsync();
 
-                // 5. Generate JWT token
+                // 5. Generate JWT
                 string token = GenerateToken(loginUser);
 
                 return new LoginResponseDTO
@@ -151,7 +149,6 @@ namespace LeaveManagement.Services
                 role = loginUser.role
             };
         }
-
         private string GenerateToken(Loginusers loginUser)
         {
             var claims = new[]
@@ -202,27 +199,6 @@ namespace LeaveManagement.Services
 
             return new JwtSecurityTokenHandler()
                 .WriteToken(token);
-        }
-        private async Task<int> GetNextEmployeeIdAsync()
-        {
-            await using var connection =
-                _db.Database.GetDbConnection();
-
-            if (connection.State !=
-                System.Data.ConnectionState.Open)
-            {
-                await connection.OpenAsync();
-            }
-
-            await using var command =
-                connection.CreateCommand();
-
-            command.CommandText =
-                "SELECT NEXT VALUE FOR EmployeeIdSequence";
-
-            var result = await command.ExecuteScalarAsync();
-
-            return Convert.ToInt32(result);
         }
     }
 }
