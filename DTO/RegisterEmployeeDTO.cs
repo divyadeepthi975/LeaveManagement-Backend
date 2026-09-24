@@ -27,11 +27,6 @@ namespace LeaveManagement.DTO
         public string Name { get; set; } = string.Empty;
 
         [Required]
-        [EmailAddress]
-        [StringLength(100)]
-        public string Email { get; set; } = string.Empty;
-
-        [Required]
         [StringLength(100)]
         public string Department { get; set; } = string.Empty;
 

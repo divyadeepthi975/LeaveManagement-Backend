@@ -1,5 +1,4 @@
-﻿
-using LeaveManagement.DTO;
+﻿using LeaveManagement.DTO;
 using LeaveManagement.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -18,18 +17,13 @@ namespace LeaveManagement.Controllers
             _leavetypeService = leavetypeService;
         }
 
+
         // GET: api/Leavetypes
         // Manager and Employee can view all leave types
+        [Authorize(Roles = "Manager,Employee")]
         [HttpGet]
         public async Task<IActionResult> GetAll()
         {
-            if (!User.IsInRole("Manager") &&
-                !User.IsInRole("Employee"))
-            {
-                return StatusCode(403,
-                    "You are not authorized to view leave types.");
-            }
-
             var leavetypes =
                 await _leavetypeService.GetAllLeavetypeAsync();
 
@@ -39,16 +33,10 @@ namespace LeaveManagement.Controllers
 
         // GET: api/Leavetypes/1
         // Manager and Employee can view a leave type
+        [Authorize(Roles = "Manager,Employee")]
         [HttpGet("{id}")]
         public async Task<IActionResult> GetById(int id)
         {
-            if (!User.IsInRole("Manager") &&
-                !User.IsInRole("Employee"))
-            {
-                return StatusCode(403,
-                    "You are not authorized to view this leave type.");
-            }
-
             var leavetype =
                 await _leavetypeService.GetLeavetypeAsync(id);
 
@@ -64,15 +52,10 @@ namespace LeaveManagement.Controllers
 
         // POST: api/Leavetypes
         // Only Manager can create a leave type
+        [Authorize(Roles = "Manager")]
         [HttpPost]
         public async Task<IActionResult> Create(LeavetypeDTO leavetype)
         {
-            if (!User.IsInRole("Manager"))
-            {
-                return StatusCode(403,
-                    "Only Managers are authorized to create leave types.");
-            }
-
             if (!ModelState.IsValid)
             {
                 return BadRequest(ModelState);
@@ -90,17 +73,12 @@ namespace LeaveManagement.Controllers
 
         // PUT: api/Leavetypes/1
         // Only Manager can update a leave type
+        [Authorize(Roles = "Manager")]
         [HttpPut("{id}")]
         public async Task<IActionResult> Update(
             int id,
             LeavetypeIsactiveDTO leavetype)
         {
-            if (!User.IsInRole("Manager"))
-            {
-                return StatusCode(403,
-                    "Only Managers are authorized to update leave types.");
-            }
-
             if (id != leavetype.leavetypeid)
             {
                 return BadRequest(
@@ -124,15 +102,13 @@ namespace LeaveManagement.Controllers
             return Ok(result);
         }
 
+
+        // DELETE: api/Leavetypes/1
+        // Only Manager can delete a leave type
+        [Authorize(Roles = "Manager")]
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(int id)
         {
-            if (!User.IsInRole("Manager"))
-            {
-                return StatusCode(403,
-                    "Only Managers are authorized to delete leave types.");
-            }
-
             var result =
                 await _leavetypeService.DeleteAsync(id);
 
@@ -140,4 +116,3 @@ namespace LeaveManagement.Controllers
         }
     }
 }
-

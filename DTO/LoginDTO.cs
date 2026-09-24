@@ -4,6 +4,7 @@ namespace LeaveManagement.DTO
 {
     public class LoginDTO
     {
+        [EmailAddress]
         [Required]
         public string username { get; set; } = string.Empty;
         [Required]

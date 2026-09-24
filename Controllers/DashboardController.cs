@@ -1,8 +1,10 @@
 ﻿using LeaveManagement.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace LeaveManagement.Controllers
 {
+    [Authorize]
     [ApiController]
     [Route("api/[controller]")]
     public class DashboardController : ControllerBase
@@ -13,7 +15,7 @@ namespace LeaveManagement.Controllers
         {
             _dashboardService = dashboardService;
         }
-
+        [Authorize(Roles = "Manager")]
         [HttpGet("leave-summary")]
         public async Task<IActionResult> GetLeaveSummary()
         {

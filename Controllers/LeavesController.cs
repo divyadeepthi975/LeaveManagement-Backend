@@ -1,5 +1,4 @@
-﻿
-using LeaveManagement.DTO;
+﻿using LeaveManagement.DTO;
 using LeaveManagement.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -22,24 +21,19 @@ namespace LeaveManagement.Controllers
 
         // POST: api/Leaves
         // Employee can apply for leave
+        [Authorize(Roles = "Employee")]
         [HttpPost]
         public async Task<IActionResult> ApplyLeave(
             [FromBody] LeaverequestDTO leaverequest)
         {
-            if (!User.IsInRole("Employee"))
-            {
-                return StatusCode(
-                    403,
-                    "Only Employees are authorized to apply for leave.");
-            }
-
             if (!ModelState.IsValid)
             {
                 return BadRequest(ModelState);
             }
 
             // Get logged-in employee ID from JWT
-            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            var userId =
+                User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
             if (userId == null)
             {
@@ -78,6 +72,7 @@ namespace LeaveManagement.Controllers
 
         // GET: api/Leaves
         // Manager can view all leaves
+        [Authorize(Roles = "Manager")]
         [HttpGet]
         public async Task<IActionResult> GetAll(
             [FromQuery] int? employeeId,
@@ -86,13 +81,6 @@ namespace LeaveManagement.Controllers
             [FromQuery] DateTime? fromDate,
             [FromQuery] DateTime? toDate)
         {
-            if (!User.IsInRole("Manager"))
-            {
-                return StatusCode(
-                    403,
-                    "Only Managers are authorized to view all leave requests.");
-            }
-
             var result =
                 await _leaveService.GetAllLeavesAsync(
                     employeeId,
@@ -108,6 +96,7 @@ namespace LeaveManagement.Controllers
         // GET: api/Leaves/{id}
         // Manager can view any leave
         // Employee can view only their own leave
+        [Authorize(Roles = "Manager,Employee")]
         [HttpGet("{id}")]
         public async Task<IActionResult> GetById(int id)
         {
@@ -142,15 +131,6 @@ namespace LeaveManagement.Controllers
                     "Employees can view only their own leave requests.");
             }
 
-            // Only Manager or Employee can access this API
-            if (!User.IsInRole("Manager") &&
-                !User.IsInRole("Employee"))
-            {
-                return StatusCode(
-                    403,
-                    "You are not authorized to view this leave request.");
-            }
-
             LeaveRequestGetDTO leaverequest =
                 new LeaveRequestGetDTO();
 
@@ -169,7 +149,6 @@ namespace LeaveManagement.Controllers
             leaverequest.todate =
                 result.todate;
 
-            // Fixed: reason should come from result.reason
             leaverequest.reason =
                 result.reason;
 
@@ -192,6 +171,7 @@ namespace LeaveManagement.Controllers
         // GET: /api/employees/{employeeId}/leaves
         // Manager can view any employee's leaves
         // Employee can view only their own leaves
+        [Authorize(Roles = "Manager,Employee")]
         [HttpGet("/api/employees/{employeeId}/leaves")]
         public async Task<IActionResult> GetEmployeeLeaves(
             int employeeId)
@@ -207,14 +187,6 @@ namespace LeaveManagement.Controllers
             if (!int.TryParse(userId, out int loggedInEmployeeId))
             {
                 return Unauthorized("Invalid employee information.");
-            }
-
-            if (!User.IsInRole("Manager") &&
-                !User.IsInRole("Employee"))
-            {
-                return StatusCode(
-                    403,
-                    "You are not authorized to view employee leave requests.");
             }
 
             // Employee can only view their own leaves
@@ -236,18 +208,12 @@ namespace LeaveManagement.Controllers
 
         // PUT: api/Leaves/{id}/approve
         // Only Manager can approve leave
+        [Authorize(Roles = "Manager")]
         [HttpPut("{id}/approve")]
         public async Task<IActionResult> Approve(
             int id,
             [FromBody] LeaveActionDTO leave)
         {
-            if (!User.IsInRole("Manager"))
-            {
-                return StatusCode(
-                    403,
-                    "Only Managers are authorized to approve leave requests.");
-            }
-
             if (!ModelState.IsValid)
             {
                 return BadRequest(ModelState);
@@ -282,18 +248,12 @@ namespace LeaveManagement.Controllers
 
         // PUT: api/Leaves/{id}/reject
         // Only Manager can reject leave
+        [Authorize(Roles = "Manager")]
         [HttpPut("{id}/reject")]
         public async Task<IActionResult> Reject(
             int id,
             [FromBody] LeaveActionDTO leave)
         {
-            if (!User.IsInRole("Manager"))
-            {
-                return StatusCode(
-                    403,
-                    "Only Managers are authorized to reject leave requests.");
-            }
-
             if (!ModelState.IsValid)
             {
                 return BadRequest(ModelState);

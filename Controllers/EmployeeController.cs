@@ -1,5 +1,4 @@
-﻿
-using LeaveManagement.DTO;
+﻿using LeaveManagement.DTO;
 using LeaveManagement.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -19,21 +18,18 @@ namespace LeaveManagement.Controllers
             _employeeService = employeeService;
         }
 
-       
+        // MANAGER ONLY
+        [Authorize(Roles = "Manager")]
         [HttpGet]
         public async Task<IActionResult> GetAllEmployees()
         {
-            if (!User.IsInRole("Manager"))
-            {
-                return StatusCode(403, "You are not authorized to view all employees.");
-            }
-
             var employees = await _employeeService.GetAllAsync();
 
             return Ok(employees);
         }
 
 
+        // MANAGER + EMPLOYEE
         [Authorize(Roles = "Manager,Employee")]
         [HttpGet("{id}")]
         public async Task<IActionResult> GetEmployeeById(int id)
@@ -67,6 +63,8 @@ namespace LeaveManagement.Controllers
         }
 
 
+        // EMPLOYEE ONLY
+        [Authorize(Roles = "Employee")]
         [HttpGet("me")]
         public async Task<IActionResult> GetMyDetails()
         {
@@ -92,6 +90,9 @@ namespace LeaveManagement.Controllers
             return Ok(employee);
         }
 
+
+        // MANAGER + EMPLOYEE
+        [Authorize(Roles = "Manager,Employee")]
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateEmployee(
             int id,
@@ -104,14 +105,13 @@ namespace LeaveManagement.Controllers
                 return Unauthorized("You are not authenticated.");
             }
 
-            if (!User.IsInRole("Manager") &&
-                !User.IsInRole("Employee"))
+            if (!int.TryParse(userId, out int employeeId))
             {
-                return StatusCode(403, "You are not authorized to perform this action.");
+                return Unauthorized("Invalid employee information.");
             }
 
-            if (User.IsInRole("Employee") &&
-                userId != id.ToString())
+            // Employee can update only their own details
+            if (User.IsInRole("Employee") && employeeId != id)
             {
                 return StatusCode(403, "You are not authorized to update this employee.");
             }
@@ -132,19 +132,15 @@ namespace LeaveManagement.Controllers
             return Ok(updatedEmployee);
         }
 
-      
+
+        // MANAGER ONLY
+        [Authorize(Roles = "Manager")]
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteEmployee(int id)
         {
-            if (!User.IsInRole("Manager"))
-            {
-                return StatusCode(403, "You are not authorized to delete an employee.");
-            }
-
             var result = await _employeeService.DeleteAsync(id);
 
             return Ok(result);
         }
     }
 }
-
