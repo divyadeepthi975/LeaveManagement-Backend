@@ -82,6 +82,8 @@ namespace LeaveManagement.Services
             leave.fromdate= leaverequest.fromdate;
             leave.todate= leaverequest.todate;
             leave.reason= leaverequest.reason;
+            leave.Employee = employee;
+            leave.Leavetype = leavetype;
 
             _db.Leaverequests.Add(leave);
 
@@ -174,6 +176,16 @@ namespace LeaveManagement.Services
             {
                 throw new ArgumentException(
                     "Only pending leave requests can be approved.");
+            }
+            if (leaveRequest.Leavetype.IsActive != true)
+            {
+                throw new ArgumentException(
+                   "The leave type with this ID is Inactive");
+            }
+            if (leaveRequest.Employee.IsActive != true)
+            {
+                throw new ArgumentException(
+                   "The Employee with this ID is Inactive");
             }
 
             var balance = await _db.Leavebalances

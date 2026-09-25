@@ -58,6 +58,11 @@ namespace LeaveManagement.Controllers
             {
                 return NotFound("Employee not found.");
             }
+            foreach (var claim in User.Claims)
+            {
+                Console.WriteLine(claim.Type);
+                Console.WriteLine(claim.Value);
+            }
 
             return Ok(employee);
         }
