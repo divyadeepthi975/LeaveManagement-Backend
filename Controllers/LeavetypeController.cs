@@ -20,8 +20,8 @@ namespace LeaveManagement.Controllers
 
         // GET: api/Leavetypes
         // Manager and Employee can view all leave types
-        [Authorize(Roles = "Manager,Employee")]
-        [HttpGet]
+        [Authorize(Roles = "Manager,Employee,Admin")]
+        [HttpGet("getall")]
         public async Task<IActionResult> GetAll()
         {
             var leavetypes =
@@ -33,8 +33,8 @@ namespace LeaveManagement.Controllers
 
         // GET: api/Leavetypes/1
         // Manager and Employee can view a leave type
-        [Authorize(Roles = "Manager,Employee")]
-        [HttpGet("{id}")]
+        [Authorize(Roles = "Manager,Employee,Admin")]
+        [HttpGet("get-by-id/{id}")]
         public async Task<IActionResult> GetById(int id)
         {
             var leavetype =
@@ -52,8 +52,8 @@ namespace LeaveManagement.Controllers
 
         // POST: api/Leavetypes
         // Only Manager can create a leave type
-        [Authorize(Roles = "Manager")]
-        [HttpPost]
+        [Authorize(Roles = "Manager,Admin")]
+        [HttpPost("create-leavetype")]
         public async Task<IActionResult> Create(LeavetypeDTO leavetype)
         {
             if (!ModelState.IsValid)
@@ -74,7 +74,7 @@ namespace LeaveManagement.Controllers
         // PUT: api/Leavetypes/1
         // Only Manager can update a leave type
         [Authorize(Roles = "Manager")]
-        [HttpPut("{id}")]
+        [HttpPut("update-leavetype/{id}")]
         public async Task<IActionResult> Update(
             int id,
             LeavetypeIsactiveDTO leavetype)
@@ -106,7 +106,7 @@ namespace LeaveManagement.Controllers
         // DELETE: api/Leavetypes/1
         // Only Manager can delete a leave type
         [Authorize(Roles = "Manager")]
-        [HttpDelete("{id}")]
+        [HttpDelete("delete-leavetype/{id}")]
         public async Task<IActionResult> Delete(int id)
         {
             var result =

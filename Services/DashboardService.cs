@@ -40,7 +40,7 @@ namespace LeaveManagement.Services
                     var totalApprovedDays = approvedLeaves.Sum(l => (l.todate - l.fromdate).Days + 1);
             return new DashboardDTO
             {
-                TotalEmployees = totalEmployees,
+                 TotalEmployees = totalEmployees,
                 ActiveEmployees = activeEmployees,
                 PendingRequests = pendingRequests,
                 ApprovedRequests = approvedRequests,

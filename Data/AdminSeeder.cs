@@ -24,8 +24,6 @@ namespace LeaveManagement
 
             try
             {
-               
-
                 var loginUser = new Loginusers
                 {
                     username = "admin@techwave.com",

@@ -47,7 +47,7 @@ namespace LeaveManagement.Controllers
 
         // MANAGER + EMPLOYEE
         [Authorize(Roles = "Manager,Employee")]
-        [HttpGet("{id}")]
+        [HttpGet("getbyid/{id}")]
         public async Task<IActionResult> GetEmployeeById(int id)
         {
             var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
@@ -114,7 +114,7 @@ namespace LeaveManagement.Controllers
 
         // MANAGER + EMPLOYEE
         [Authorize(Roles = "Manager,Employee")]
-        [HttpPut("{id}")]
+        [HttpPut("updateemployee/{id}")]
         public async Task<IActionResult> UpdateEmployee(
             int id,
             EmployeewithIDDTO employee)
@@ -149,7 +149,10 @@ namespace LeaveManagement.Controllers
             {
                 return NotFound("Employee is inactive or not found.");
             }
-
+            if(updatedEmployee.IsActive == false)
+            {
+                return BadRequest("Employee is inactive.");
+            }
             return Ok(updatedEmployee);
         }
 

@@ -88,9 +88,9 @@
         "PUT:/api/admin/users/{employeeid}/status",
         "GET:/api/dashboard/leave-summary",
         "GET:/api/employee/me",
-        "POST:/api/leavetypes",
-        "PUT:/api/leavetypes/{id}",
-        "DELETE:/api/leavetypes/{id}",
+        "POST:/api/leavetypes/create-leavetype",
+        "PUT:/api/leavetypes/update-leavetype/{id}",
+        "DELETE:/api/leavetypes/delete-leavetype/{id}",
 
     ]);
 
@@ -106,6 +106,8 @@
         // Employees
         "GET:/api/employee",
         "DELETE:/api/employee/{id}",
+        "GET:/api/employee/me",
+        "POST:/api/employee/Createemployee",
 
         // Leaves
         "GET:/api/leaves",
@@ -113,16 +115,8 @@
         "PUT:/api/leaves/{id}/reject",
 
         // Leave Types
-        "POST:/api/leavetypes",
-        "PUT:/api/leavetypes/{id}",
-        "DELETE:/api/leavetypes/{id}",
-        "GET:/api/employee/{id}",
-        "PUT:/api/employee/{id}",
-
-        // Leave Types
-        "GET:/api/leavetypes",
-        "GET:/api/leavetypes/{id}",
-
+        "POST:/api/leavetypes/create-leavetype",
+        "PUT:/api/leavetypes/update-leavetype/{id}",
     ]);
 
 
@@ -149,8 +143,8 @@
         "PUT:/api/employee/{id}",
 
         // Leave Types
-        "GET:/api/leavetypes",
-        "GET:/api/leavetypes/{id}",
+        "GET:/api/leavetypes/getall",
+        "GET:/api/leavetypes/get-by-id/{id}",
 
         // Leave Balance
         "GET:/api/employees/{employeeid}/leave-balance",
