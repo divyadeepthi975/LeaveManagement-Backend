@@ -15,16 +15,7 @@ namespace LeaveManagement.Controllers
         {
             _loginService = loginService;
         }
-        [AllowAnonymous]
-        [HttpPost("register")]
-        public async Task<IActionResult> Register([FromBody] RegisterEmployeeDTO registerDTO)
-        {
-            var result =
-                await _loginService.RegisterEmployeeAsync(
-                    registerDTO);
-
-            return Ok(result);
-        }
+        
         [AllowAnonymous]
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] LoginDTO loginDTO)

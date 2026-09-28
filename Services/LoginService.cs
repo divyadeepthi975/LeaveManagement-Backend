@@ -32,91 +32,13 @@ namespace LeaveManagement.Services
                 new PasswordHasher<Loginusers>();
         }
 
-        public async Task<LoginResponseDTO> RegisterEmployeeAsync(
-            RegisterEmployeeDTO registerDTO)
-        {
-            string role = registerDTO.role.Trim();
-
-            if (role != "Manager" && role != "Employee")
-            {
-                throw new Exception(
-                    "Role must be Manager or Employee.");
-            }
-
-            bool usernameExists = await _db.Loginuser
-                .AnyAsync(l =>
-                    l.username == registerDTO.username);
-
-            if (usernameExists)
-            {
-                throw new Exception(
-                    "Username already exists.");
-            }
-
-            await using var transaction =
-      await _db.Database.BeginTransactionAsync();
-
-            try
-            {
-                // 1. Create Loginusers
-                var loginUser = new Loginusers
-                {
-                    username = registerDTO.username,
-                    role = role
-                };
-
-                loginUser.passwordhash =
-                    _passwordHasher.HashPassword(
-                        loginUser,
-                        registerDTO.password);
-
-                _db.Loginuser.Add(loginUser);
-
-                await _db.SaveChangesAsync();
-
-                // 2. SQL Server generated the ID
-                int employeeId = loginUser.employeeid;
-
-                // 3. Create Employee with the SAME ID
-                var employeeDTO = new EmployeeDTO
-                {
-                    EmployeeCode = registerDTO.EmployeeCode,
-                    Name = registerDTO.Name,
-                    Email = registerDTO.username,
-                    Department = registerDTO.Department,
-                    JoiningDate = registerDTO.JoiningDate,
-                    loginuser=loginUser                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             
-                };
-
-                await _employeeService.AddWithIdAsync(
-                    employeeDTO,
-                    employeeId);
-
-                // 4. Commit
-                await transaction.CommitAsync();
-
-                // 5. Generate JWT
-                string token = GenerateToken(loginUser);
-
-                return new LoginResponseDTO
-                {
-                    token = token,
-                    employeeid = employeeId,
-                    username = loginUser.username,
-                    role = loginUser.role
-                };
-            }
-            catch
-            {
-                await transaction.RollbackAsync();
-                throw;
-            }
-        }
+        
 
         public async Task<LoginResponseDTO> LoginAsync(
             LoginDTO loginDTO)
         {
             var loginUser = await _db.Loginuser
+                .Include(u => u.employee)
                 .FirstOrDefaultAsync(l =>
                     l.username == loginDTO.username);
 
@@ -137,6 +59,11 @@ namespace LeaveManagement.Services
             {
                 throw new UnauthorizedAccessException(
                     "Invalid username or password.");
+            }
+            if (!loginUser.employee!.IsActive)
+            {
+                throw new UnauthorizedAccessException(
+                    "User is not active");
             }
 
             string token = GenerateToken(loginUser);

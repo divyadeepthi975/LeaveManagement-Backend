@@ -1,6 +1,7 @@
 ﻿using LeaveManagement.Data;
 using LeaveManagement.DTO;
 using LeaveManagement.Models.Entities;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
 namespace LeaveManagement.Services
@@ -8,70 +9,128 @@ namespace LeaveManagement.Services
     public class EmployeeService : IEmployeeService
     {
         private readonly AppDbContext _db;
+        PasswordHasher<Loginusers> _passwordHasher;
 
-        public EmployeeService(AppDbContext db)
+        public EmployeeService(AppDbContext db, PasswordHasher<Loginusers> passwordHasher)
         {
             _db = db;
+            _passwordHasher = passwordHasher;
         }
 
         // CREATE EMPLOYEE
-        public async Task<Employee> AddAsync(EmployeeDTO employee)
+        public async Task<EmployeewithIDDTO> CreateEmployeeAsync(EmployeeDTO employee)
         {
-            bool exists = await _db.Employees
-                .AnyAsync(e =>
-                    e.EmployeeCode == employee.EmployeeCode);
+            await using var transaction = await _db.Database.BeginTransactionAsync();
 
-            if (exists)
+            try
             {
-                throw new Exception(
-                    "Employee code already exists.");
-            }
+                // Check duplicate employee code
+                bool employeeCodeExists = await _db.Employees
+                    .AnyAsync(e => e.EmployeeCode == employee.EmployeeCode);
 
-            bool emailExists = await _db.Employees
-                .AnyAsync(e =>
-                    e.Email == employee.Email);
-
-            if (emailExists)
-            {
-                throw new Exception(
-                    "Email already exists.");
-            }
-
-            Employee emp = new Employee
-            {
-                EmployeeCode = employee.EmployeeCode,
-                Name = employee.Name,
-                Department = employee.Department,
-                Email = employee.Email,
-                JoiningDate = employee.JoiningDate,
-                IsActive = true
-                
-            };
-
-            _db.Employees.Add(emp);
-
-            await _db.SaveChangesAsync();
-
-            var leavetypes = await _db.Leavetypes
-                .Where(l => l.IsActive == true)
-                .ToListAsync();
-
-            foreach (var leavetype in leavetypes)
-            {
-                Leavebalance leave = new Leavebalance
+                if (employeeCodeExists)
                 {
-                    employeeid = emp.EmployeeId,
-                    leavetypeid = leavetype.leavetypeid,
-                    totaldays = leavetype.maximumdays,
-                    useddays = 0
+                    throw new Exception("Employee code already exists.");
+                }
+
+                // Check duplicate employee email
+                bool emailExists = await _db.Employees
+                    .AnyAsync(e => e.Email == employee.Email);
+
+                if (emailExists)
+                {
+                    throw new Exception("Email already exists.");
+                }
+
+                // Check duplicate login username
+                bool usernameExists = await _db.Loginuser
+                    .AnyAsync(u => u.username == employee.Email);
+
+                if (usernameExists)
+                {
+                    throw new Exception("Login account already exists for this email.");
+                }
+
+
+
+                var loginUser = new Loginusers
+                {
+                    username = employee.Email,
+                    role = "Employee"
                 };
 
-                _db.Leavebalances.Add(leave);
+                // Hash password
+                loginUser.passwordhash = _passwordHasher.HashPassword(
+                    loginUser,
+                    employee.Password
+                );
+
+                _db.Loginuser.Add(loginUser);
+
+                await _db.SaveChangesAsync();
+
+
+
+                var emp = new Employee
+                {
+                    EmployeeId = loginUser.employeeid,
+                    EmployeeCode = employee.EmployeeCode,
+                    Name = employee.Name,
+                    Email = employee.Email,
+                    Department = employee.Department,
+                    JoiningDate = employee.JoiningDate,
+                    IsActive = true,
+                    loginuser=loginUser
+                };
+
+                _db.Employees.Add(emp);
+
+                await _db.SaveChangesAsync();
+
+
+                var leaveTypes = await _db.Leavetypes
+                    .ToListAsync();
+
+                foreach (var leaveType in leaveTypes)
+                {
+                    var leaveBalance = new Leavebalance
+                    {
+                        employeeid = emp.EmployeeId,
+                        leavetypeid = leaveType.leavetypeid,
+                        totaldays = leaveType.maximumdays,
+                        useddays = 0
+                    };
+
+                    _db.Leavebalances.Add(leaveBalance);
+                }
+
+                await _db.SaveChangesAsync();
+                
+
+                // =====================================================
+                // 4. COMMIT EVERYTHING
+                // =====================================================
+
+                await transaction.CommitAsync();
+
+                return new EmployeewithIDDTO
+                {
+                    EmployeeId = emp.EmployeeId,
+                    EmployeeCode = emp.EmployeeCode,
+                    Name = emp.Name,
+                    Email = emp.Email,
+                    Department = emp.Department,
+                    JoiningDate = emp.JoiningDate,
+                    IsActive = emp.IsActive,
+                    role = loginUser.role
+
+                };
             }
-
-            await _db.SaveChangesAsync();
-
-            return emp;
+            catch
+            {
+                await transaction.RollbackAsync();
+                throw;
+            }
         }
 
 
@@ -101,9 +160,10 @@ namespace LeaveManagement.Services
 
 
         // GET ALL EMPLOYEES
-        public async Task<IEnumerable<EmployeewithIDDTO>> GetAllAsync()
+        public async Task<List<EmployeewithIDDTO>> GetAllEmployeesAsync()
         {
             return await _db.Employees
+                .Where(e => e.loginuser!.role == "Employee")
                 .Select(e => new EmployeewithIDDTO
                 {
                     EmployeeId = e.EmployeeId,
@@ -113,11 +173,10 @@ namespace LeaveManagement.Services
                     Department = e.Department,
                     JoiningDate = e.JoiningDate,
                     IsActive = e.IsActive,
-                    role = e.loginuser.role
+                    role = e.loginuser!.role
                 })
                 .ToListAsync();
         }
-
 
         // GET EMPLOYEE BY ID
         public async Task<EmployeewithIDDTO?> GetByIdAsync(int id)
@@ -133,7 +192,7 @@ namespace LeaveManagement.Services
                     Department = e.Department,
                     JoiningDate = e.JoiningDate,
                     IsActive = e.IsActive,
-                    role = e.loginuser.role
+                    role = e.loginuser!.role
                 })
                 .FirstOrDefaultAsync();
         }
@@ -162,7 +221,7 @@ namespace LeaveManagement.Services
             emp.Department = employee.Department;
             emp.JoiningDate = employee.JoiningDate;
             emp.IsActive = employee.IsActive;
-            loginuser.username = employee.Email;
+            loginuser!.username = employee.Email;
             emp.loginuser = loginuser;
 
             await _db.SaveChangesAsync();
@@ -215,8 +274,8 @@ namespace LeaveManagement.Services
                 Email = employeeDTO.Email,
                 Department = employeeDTO.Department,
                 JoiningDate = employeeDTO.JoiningDate,
-                IsActive = true,
-                loginuser = employeeDTO.loginuser
+                IsActive = true
+               
             };
 
             _db.Employees.Add(employee);

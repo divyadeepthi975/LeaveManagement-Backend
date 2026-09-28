@@ -3,11 +3,11 @@ using LeaveManagement.Models.Entities;
 
 public interface IEmployeeService
 {
-    Task<Employee> AddAsync(EmployeeDTO employee);
+    Task<EmployeewithIDDTO> CreateEmployeeAsync(EmployeeDTO employee);
 
     Task<string> DeleteAsync(int id);
 
-    Task<IEnumerable<EmployeewithIDDTO>> GetAllAsync();
+    Task<List<EmployeewithIDDTO>> GetAllEmployeesAsync();
 
     Task<EmployeewithIDDTO?> GetByIdAsync(int id);
 

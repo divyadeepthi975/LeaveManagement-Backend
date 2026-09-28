@@ -2,7 +2,29 @@
 
 public static class SwaggerRoleConfiguration
 {
-    // Manager can access these APIs only
+    // =========================================================
+    // ADMIN ONLY APIs
+    // =========================================================
+    public static readonly HashSet<string> AdminOnlyRoutes =
+        new(StringComparer.OrdinalIgnoreCase)
+        {
+            // Admin - User Management
+            "POST:/api/admin/employees",
+            "POST:/api/admin/managers",
+            "GET:/api/admin/users",
+
+            // Change User Role
+            "PUT:/api/admin/users/{employeeId}/change-to-manager",
+            "PUT:/api/admin/users/{employeeId}/change-to-employee",
+
+            // Activate / Deactivate User
+            "PUT:/api/admin/users/{employeeId}/status"
+        };
+
+
+    // =========================================================
+    // MANAGER ONLY APIs
+    // =========================================================
     public static readonly HashSet<string> ManagerOnlyRoutes =
         new(StringComparer.OrdinalIgnoreCase)
         {
@@ -25,7 +47,9 @@ public static class SwaggerRoleConfiguration
         };
 
 
-    // Employee can access these APIs only
+    // =========================================================
+    // EMPLOYEE ONLY APIs
+    // =========================================================
     public static readonly HashSet<string> EmployeeOnlyRoutes =
         new(StringComparer.OrdinalIgnoreCase)
         {
@@ -37,8 +61,9 @@ public static class SwaggerRoleConfiguration
         };
 
 
-    // Both Manager and Employee can access these APIs
-    // Employee is restricted to their own data by controller logic.
+    // =========================================================
+    // SHARED APIs
+    // =========================================================
     public static readonly HashSet<string> SharedRoutes =
         new(StringComparer.OrdinalIgnoreCase)
         {
@@ -59,10 +84,13 @@ public static class SwaggerRoleConfiguration
         };
 
 
-    // No JWT required
+    // =========================================================
+    // PUBLIC APIs
+    // =========================================================
     public static readonly HashSet<string> PublicRoutes =
         new(StringComparer.OrdinalIgnoreCase)
         {
-            "POST:/api/auth/login"
+            // Login does not require JWT
+            "POST:/api/login/login"
         };
 }

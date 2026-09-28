@@ -1,5 +1,5 @@
 ﻿using LeaveManagement.DTO;
-using LeaveManagement.Services;
+using LeaveManagement.Models.Entities;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
@@ -17,13 +17,29 @@ namespace LeaveManagement.Controllers
         {
             _employeeService = employeeService;
         }
+        [Authorize(Roles = "Manager")]
+        [HttpPost("Createemployee")]
+        public async Task<IActionResult> CreateEmployee(EmployeeDTO employee) {
+            
+                if (!ModelState.IsValid)
+                {
+                    return BadRequest(ModelState);
+                }
+
+            var result =
+                await _employeeService.CreateEmployeeAsync(employee);
+
+            return Ok(result);
+            
+
+        }
 
         // MANAGER ONLY
         [Authorize(Roles = "Manager")]
         [HttpGet]
         public async Task<IActionResult> GetAllEmployees()
         {
-            var employees = await _employeeService.GetAllAsync();
+            var employees = await _employeeService.GetAllEmployeesAsync();
 
             return Ok(employees);
         }
@@ -69,7 +85,7 @@ namespace LeaveManagement.Controllers
 
 
         // EMPLOYEE ONLY
-        [Authorize(Roles = "Employee")]
+        [Authorize(Roles = "Employee,Manager,Admin")]
         [HttpGet("me")]
         public async Task<IActionResult> GetMyDetails()
         {

@@ -1,8 +1,11 @@
 using DotNetEnv;
+using LeaveManagement;
 using LeaveManagement.Data;
+using LeaveManagement.Models.Entities;
 using LeaveManagement.Services;
 
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
@@ -57,6 +60,8 @@ builder.Services.AddScoped<ILeaveService, LeaveService>();
 builder.Services.AddScoped<DashboardService>();
 builder.Services.AddScoped<LeaveBalanceService>();
 builder.Services.AddScoped<ILoginService, LoginService>();
+builder.Services.AddScoped<IAdminService, AdminService>();
+builder.Services.AddScoped<PasswordHasher<Loginusers>>();
 
 
 // =====================================================
@@ -174,6 +179,13 @@ builder.Services.AddSwaggerGen(options =>
 
 
 var app = builder.Build();
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider
+        .GetRequiredService<AppDbContext>();
+
+    await AdminSeeder.SeedAdminAsync(db);
+}
 
 
 // =====================================================

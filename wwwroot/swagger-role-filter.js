@@ -5,60 +5,6 @@
 
 
     // =========================================================
-    // PUBLIC APIs
-    // =========================================================
-    const publicRoutes = new Set([
-        "POST:/api/login/login",
-        "POST:/api/login/register"
-    ]);
-
-
-    // =========================================================
-    // MANAGER ONLY APIs
-    // =========================================================
-    const managerOnlyRoutes = new Set([
-        "GET:/api/dashboard/leave-summary",
-
-        "GET:/api/employee",
-        "DELETE:/api/employee/{id}",
-
-        "GET:/api/leaves",
-        "PUT:/api/leaves/{id}/approve",
-        "PUT:/api/leaves/{id}/reject",
-
-        "POST:/api/leavetypes",
-        "PUT:/api/leavetypes/{id}",
-        "DELETE:/api/leavetypes/{id}"
-    ]);
-
-
-    // =========================================================
-    // EMPLOYEE ONLY APIs
-    // =========================================================
-    const employeeOnlyRoutes = new Set([
-        "GET:/api/employee/me",
-        "POST:/api/leaves"
-    ]);
-
-
-    // =========================================================
-    // SHARED APIs
-    // =========================================================
-    const sharedRoutes = new Set([
-        "GET:/api/employee/{id}",
-        "PUT:/api/employee/{id}",
-
-        "GET:/api/leavetypes",
-        "GET:/api/leavetypes/{id}",
-
-        "GET:/api/employees/{employeeid}/leave-balance",
-
-        "GET:/api/leaves/{id}",
-        "GET:/api/employees/{employeeid}/leaves"
-    ]);
-
-
-    // =========================================================
     // NORMALIZE ROUTE
     // =========================================================
     function normalizeRoute(method, path) {
@@ -71,17 +17,10 @@
             .trim()
             .replace(/\s+/g, "");
 
-        /*
-         * Remove trailing slash
-         */
+        // Remove trailing slash
         path = path.replace(/\/+$/, "");
 
-        /*
-         * Convert route parameters to lowercase
-         *
-         * {id}          -> {id}
-         * {employeeId}  -> {employeeid}
-         */
+        // Convert route parameters to lowercase
         path = path.replace(
             /\{([^}]+)\}/g,
             function (_, parameter) {
@@ -89,13 +28,166 @@
             }
         );
 
-        /*
-         * Route itself is case-insensitive
-         */
+        // Route itself is case-insensitive
         path = path.toLowerCase();
 
         return method + ":" + path;
     }
+
+
+    // =========================================================
+    // NORMALIZE ROUTE KEY
+    // =========================================================
+    function normalizeRouteKey(route) {
+
+        const separatorIndex = route.indexOf(":");
+
+        if (separatorIndex === -1) {
+            return route.trim().toLowerCase();
+        }
+
+        const method =
+            route.substring(0, separatorIndex);
+
+        const path =
+            route.substring(separatorIndex + 1);
+
+        return normalizeRoute(method, path);
+    }
+
+
+    // =========================================================
+    // PUBLIC APIs
+    // =========================================================
+    const publicRoutes = new Set([
+        "POST:/api/login/login"
+    ]);
+
+
+    // =========================================================
+    // ADMIN ONLY APIs
+    // =========================================================
+    const adminOnlyRoutes = new Set([
+
+        // Create Employee
+        "POST:/api/admin/employees",
+
+        // Create Manager
+        "POST:/api/admin/managers",
+
+        // Get All Users
+        "GET:/api/admin/users",
+
+        // Change Employee -> Manager
+        "PUT:/api/admin/users/{employeeid}/change-to-manager",
+
+        // Change Manager -> Employee
+        "PUT:/api/admin/users/{employeeid}/change-to-employee",
+
+        // Activate / Deactivate User
+        "PUT:/api/admin/users/{employeeid}/status",
+        "GET:/api/dashboard/leave-summary",
+        "GET:/api/employee/me",
+        "POST:/api/leavetypes",
+        "PUT:/api/leavetypes/{id}",
+        "DELETE:/api/leavetypes/{id}",
+
+    ]);
+
+
+    // =========================================================
+    // MANAGER ONLY APIs
+    // =========================================================
+    const managerOnlyRoutes = new Set([
+
+        // Dashboard
+        "GET:/api/dashboard/leave-summary",
+
+        // Employees
+        "GET:/api/employee",
+        "DELETE:/api/employee/{id}",
+
+        // Leaves
+        "GET:/api/leaves",
+        "PUT:/api/leaves/{id}/approve",
+        "PUT:/api/leaves/{id}/reject",
+
+        // Leave Types
+        "POST:/api/leavetypes",
+        "PUT:/api/leavetypes/{id}",
+        "DELETE:/api/leavetypes/{id}",
+        "GET:/api/employee/{id}",
+        "PUT:/api/employee/{id}",
+
+        // Leave Types
+        "GET:/api/leavetypes",
+        "GET:/api/leavetypes/{id}",
+
+    ]);
+
+
+    // =========================================================
+    // EMPLOYEE ONLY APIs
+    // =========================================================
+    const employeeOnlyRoutes = new Set([
+
+        // Employee's own details
+        "GET:/api/employee/me",
+
+        // Apply leave
+        "POST:/api/leaves"
+    ]);
+
+
+    // =========================================================
+    // SHARED APIs
+    // =========================================================
+    const sharedRoutes = new Set([
+
+        // Employee
+        "GET:/api/employee/{id}",
+        "PUT:/api/employee/{id}",
+
+        // Leave Types
+        "GET:/api/leavetypes",
+        "GET:/api/leavetypes/{id}",
+
+        // Leave Balance
+        "GET:/api/employees/{employeeid}/leave-balance",
+
+        // Leaves
+        "GET:/api/leaves/{id}",
+        "GET:/api/employees/{employeeid}/leaves"
+    ]);
+
+
+    // =========================================================
+    // NORMALIZE ALL ROUTE SETS
+    // =========================================================
+    const normalizedPublicRoutes =
+        new Set(
+            [...publicRoutes].map(normalizeRouteKey)
+        );
+
+    const normalizedAdminOnlyRoutes =
+        new Set(
+            [...adminOnlyRoutes].map(normalizeRouteKey)
+        );
+
+    const normalizedManagerOnlyRoutes =
+        new Set(
+            [...managerOnlyRoutes].map(normalizeRouteKey)
+        );
+
+    const normalizedEmployeeOnlyRoutes =
+        new Set(
+            [...employeeOnlyRoutes].map(normalizeRouteKey)
+        );
+
+    const normalizedSharedRoutes =
+        new Set(
+            [...sharedRoutes].map(normalizeRouteKey)
+        );
 
 
     // =========================================================
@@ -158,7 +250,7 @@
             payload.roles ||
             payload.Roles ||
             payload[
-                "http://schemas.microsoft.com/ws/2008/06/identity/claims/role"
+            "http://schemas.microsoft.com/ws/2008/06/identity/claims/role"
             ];
 
         if (Array.isArray(role)) {
@@ -225,19 +317,13 @@
             let token = null;
 
             if (typeof bearer === "string") {
-
                 token = bearer;
-
             }
             else if (bearer.value) {
-
                 token = bearer.value;
-
             }
             else if (bearer.schema) {
-
                 token = bearer.schema;
-
             }
 
             if (!token) {
@@ -315,11 +401,10 @@
                 }
 
                 if (
-                    publicRoutes.has(key)
+                    normalizedPublicRoutes.has(key)
                 ) {
 
-                    operation.style.display =
-                        "";
+                    operation.style.display = "";
 
                 }
                 else {
@@ -420,11 +505,34 @@
             // PUBLIC
             // =================================================
             if (
-                publicRoutes.has(key)
+                normalizedPublicRoutes.has(key)
             ) {
 
-                operation.style.display =
-                    "";
+                operation.style.display = "";
+
+                return;
+            }
+
+
+            // =================================================
+            // ADMIN ONLY
+            // =================================================
+            if (
+                normalizedAdminOnlyRoutes.has(key)
+            ) {
+
+                if (
+                    role === "admin"
+                ) {
+
+                    operation.style.display = "";
+
+                }
+                else {
+
+                    operation.style.display =
+                        "none";
+                }
 
                 return;
             }
@@ -434,15 +542,14 @@
             // MANAGER ONLY
             // =================================================
             if (
-                managerOnlyRoutes.has(key)
+                normalizedManagerOnlyRoutes.has(key)
             ) {
 
                 if (
                     role === "manager"
                 ) {
 
-                    operation.style.display =
-                        "";
+                    operation.style.display = "";
 
                 }
                 else {
@@ -459,15 +566,14 @@
             // EMPLOYEE ONLY
             // =================================================
             if (
-                employeeOnlyRoutes.has(key)
+                normalizedEmployeeOnlyRoutes.has(key)
             ) {
 
                 if (
                     role === "employee"
                 ) {
 
-                    operation.style.display =
-                        "";
+                    operation.style.display = "";
 
                 }
                 else {
@@ -484,20 +590,20 @@
             // SHARED
             // =================================================
             if (
-                sharedRoutes.has(key)
+                normalizedSharedRoutes.has(key)
             ) {
 
                 /*
                  * Both Manager and Employee
                  * can see shared APIs.
                  */
+
                 if (
                     role === "manager" ||
                     role === "employee"
                 ) {
 
-                    operation.style.display =
-                        "";
+                    operation.style.display = "";
 
                 }
                 else {
@@ -570,6 +676,7 @@
 
                     tag.style.display =
                         "";
+
                 }
 
             });
