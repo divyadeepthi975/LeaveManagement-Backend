@@ -1,7 +1,9 @@
 ﻿using LeaveManagement.DTO;
+using LeaveManagement.Models.Entities;
 using LeaveManagement.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.IdentityModel.Tokens;
 using System.Security.Claims;
 
 namespace LeaveManagement.Controllers
@@ -72,30 +74,59 @@ namespace LeaveManagement.Controllers
 
         // GET: api/Leaves
         // Manager can view all leaves
-        [Authorize(Roles = "Manager")]
+        [Authorize(Roles = "Manager,Employee")]
         [HttpGet]
         public async Task<IActionResult> GetAll(
-            [FromQuery] int? employeeId,
+            [FromQuery] int? employeeid,
             [FromQuery] int? leaveTypeId,
             [FromQuery] string? status,
             [FromQuery] DateTime? fromDate,
             [FromQuery] DateTime? toDate)
         {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
+            // Get logged-in employee ID from JWT
+            var userId =
+                User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+            if (userId == null)
+            {
+                return Unauthorized("You are not authenticated.");
+            }
+
+            if (!int.TryParse(userId, out int employeeId))
+            {
+                return Unauthorized("Invalid employee information.");
+            }
+
+            // Employee can apply leave only for themselves
+            if (User.IsInRole("Employee") && employeeId != employeeid)
+            {
+                return StatusCode(
+                    403,
+                    "Employees can get leave information about which they are applied.");
+            }
+
             var result =
                 await _leaveService.GetAllLeavesAsync(
-                    employeeId,
+                    employeeid,
                     leaveTypeId,
                     status,
                     fromDate,
                     toDate);
+            if (result.IsNullOrEmpty())
+            {
+                return StatusCode(
+                    404,
+                    "LeaveRequests with this filter not found");
+            }
 
             return Ok(result);
         }
 
-
-        // GET: api/Leaves/{id}
-        // Manager can view any leave
-        // Employee can view only their own leave
         [Authorize(Roles = "Manager,Employee")]
         [HttpGet("{id}")]
         public async Task<IActionResult> GetById(int id)
@@ -116,10 +147,11 @@ namespace LeaveManagement.Controllers
             var result =
                 await _leaveService.GetLeaveByIdAsync(id);
 
-            if (result == null)
+            if (result==null)
             {
-                return NotFound(
-                    $"Leave request with ID {id} not found.");
+                return StatusCode(
+                    404,
+                    $"Employees with this LeaveRequest ID-{id} not found");
             }
 
             // Employee can only view their own leave
@@ -201,6 +233,12 @@ namespace LeaveManagement.Controllers
             var result =
                 await _leaveService.GetEmployeeLeavesAsync(
                     employeeId);
+            if (result.IsNullOrEmpty())
+            {
+                return StatusCode(
+                    404,
+                    $"Employees with this ID-{employeeId} not found");
+            }
 
             return Ok(result);
         }

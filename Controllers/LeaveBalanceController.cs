@@ -49,6 +49,12 @@ namespace LeaveManagement.Controllers
 
             var result =
                 await _leaveBalanceService.GetLeaveBalance(employeeId);
+            if (result==null)
+            {
+                return StatusCode(
+                    404,
+                    $"LeaveBalances with this EmployeeID-{employeeId} not found");
+            }
 
             return Ok(result);
         }

@@ -11,7 +11,7 @@ public interface IEmployeeService
 
     Task<EmployeewithIDDTO?> GetByIdAsync(int id);
 
-    Task<EmployeewithIDDTO?> UpdateAsync(
+    Task<object?> UpdateAsync(
         EmployeewithIDDTO employee);
 
     Task<Employee> AddWithIdAsync(

@@ -1,7 +1,9 @@
 ﻿using LeaveManagement.DTO;
 using LeaveManagement.Services;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
+using Superpower.Model;
 
 namespace LeaveManagement.Controllers
 {
@@ -26,6 +28,12 @@ namespace LeaveManagement.Controllers
         {
             var leavetypes =
                 await _leavetypeService.GetAllLeavetypeAsync();
+            if (leavetypes==null)
+            {
+                return StatusCode(
+                    404,
+                    "No Leave Types found");
+            }
 
             return Ok(leavetypes);
         }
@@ -40,10 +48,11 @@ namespace LeaveManagement.Controllers
             var leavetype =
                 await _leavetypeService.GetLeavetypeAsync(id);
 
-            if (leavetype == null)
+            if (leavetype==null)
             {
-                return NotFound(
-                    $"Leave type with ID {id} not found.");
+                return StatusCode(
+                    404,
+                    $"Leavetype with this ID-{id} not found");
             }
 
             return Ok(leavetype);
@@ -73,7 +82,7 @@ namespace LeaveManagement.Controllers
 
         // PUT: api/Leavetypes/1
         // Only Manager can update a leave type
-        [Authorize(Roles = "Manager")]
+        [Authorize(Roles = "Manager,Admin")]
         [HttpPut("update-leavetype/{id}")]
         public async Task<IActionResult> Update(
             int id,
@@ -93,10 +102,11 @@ namespace LeaveManagement.Controllers
             var result =
                 await _leavetypeService.UpdateLeavetypeAsync(leavetype);
 
-            if (result == null)
+            if (result==null)
             {
-                return NotFound(
-                    $"Leave type with ID {id} not found.");
+                return StatusCode(
+                    404,
+                    $"Leavetype with this ID-{id} not found ");
             }
 
             return Ok(result);
@@ -105,7 +115,7 @@ namespace LeaveManagement.Controllers
 
         // DELETE: api/Leavetypes/1
         // Only Manager can delete a leave type
-        [Authorize(Roles = "Manager")]
+        [Authorize(Roles = "Manager,Admin")]
         [HttpDelete("delete-leavetype/{id}")]
         public async Task<IActionResult> Delete(int id)
         {

@@ -8,7 +8,7 @@ namespace LeaveManagement.Services
         Task<LeaveRequestGetDTO?> ApplyLeaveAsync(
      LeaverequestDTO leaverequest);
 
-        Task<IEnumerable<Leaverequest>> GetAllLeavesAsync(
+        Task<IEnumerable<LeaveRequestGetDTO>> GetAllLeavesAsync(
             int? employeeId = null,
             int? leaveTypeId = null,
             string? status = null,

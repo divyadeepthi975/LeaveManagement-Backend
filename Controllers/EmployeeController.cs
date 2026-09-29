@@ -134,7 +134,7 @@ namespace LeaveManagement.Controllers
             // Employee can update only their own details
             if (User.IsInRole("Employee") && employeeId != id)
             {
-                return StatusCode(403, "You are not authorized to update this employee.");
+                return StatusCode(403, "Employee Id mismatch and not unauthorized to edit with requested ID.");
             }
 
             if (id != employee.EmployeeId)
@@ -149,10 +149,7 @@ namespace LeaveManagement.Controllers
             {
                 return NotFound("Employee is inactive or not found.");
             }
-            if(updatedEmployee.IsActive == false)
-            {
-                return BadRequest("Employee is inactive.");
-            }
+           
             return Ok(updatedEmployee);
         }
 

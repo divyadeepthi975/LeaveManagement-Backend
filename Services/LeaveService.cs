@@ -92,12 +92,12 @@ namespace LeaveManagement.Services
             return MapToDTO(leave);
         }
 
-        public async Task<IEnumerable<Leaverequest>> GetAllLeavesAsync(
-            int? employeeId = null,
-            int? leaveTypeId = null,
-            string? status = null,
-            DateTime? fromDate = null,
-            DateTime? toDate = null)
+        public async Task<IEnumerable<LeaveRequestGetDTO>> GetAllLeavesAsync(
+     int? employeeId = null,
+     int? leaveTypeId = null,
+     string? status = null,
+     DateTime? fromDate = null,
+     DateTime? toDate = null)
         {
             var query = _db.Leaverequests.AsQueryable();
 
@@ -115,6 +115,8 @@ namespace LeaveManagement.Services
 
             if (!string.IsNullOrWhiteSpace(status))
             {
+                status = status.Trim().ToLower();
+
                 query = query.Where(l =>
                     l.status == status);
             }
@@ -133,10 +135,21 @@ namespace LeaveManagement.Services
 
             return await query
                 .OrderByDescending(l => l.applieddate)
+                .Select(l => new LeaveRequestGetDTO
+                {
+                    leaverequestid = l.leaverequestid,
+                    employeeid = l.employeeid,
+                    leavetypeid = l.leavetypeid,
+                    fromdate = l.fromdate,
+                    todate = l.todate,
+                    reason = l.reason,
+                    status = l.status,
+                    applieddate = l.applieddate,
+                    approvedby = l.approvedby,
+                    comments = l.comments
+                })
                 .ToListAsync();
-
         }
-
         public async Task<IEnumerable<LeaveRequestGetDTO>>GetEmployeeLeavesAsync(int employeeId)
         {
             var leaves = await _db.Leaverequests
@@ -164,6 +177,8 @@ namespace LeaveManagement.Services
         public async Task<string?> ApproveLeaveAsync(LeaveActionDTO leave)
         {
             var leaveRequest = await _db.Leaverequests
+                .Include(l => l.Employee)
+                .Include(l => l.Leavetype)
                 .FirstOrDefaultAsync(l =>
                     l.leaverequestid == leave.id);
 
@@ -177,18 +192,20 @@ namespace LeaveManagement.Services
                 throw new ArgumentException(
                     "Only pending leave requests can be approved.");
             }
-            if (leaveRequest.Leavetype.IsActive != true)
+            if (leaveRequest.Leavetype!.IsActive != true)
             {
                 throw new ArgumentException(
                    "The leave type with this ID is Inactive");
             }
-            if (leaveRequest.Employee.IsActive != true)
+            if (leaveRequest.Employee!.IsActive != true)
             {
                 throw new ArgumentException(
                    "The Employee with this ID is Inactive");
             }
 
             var balance = await _db.Leavebalances
+                .Include(l=>l.Employee)
+                .Include(l=>l.Leavetype)
                 .FirstOrDefaultAsync(b =>
                     b.employeeid == leaveRequest.employeeid &&
                     b.leavetypeid == leaveRequest.leavetypeid);
@@ -222,6 +239,8 @@ namespace LeaveManagement.Services
         public async Task<string?> RejectLeaveAsync(LeaveActionDTO leave)
         {
             var leaveRequest = await _db.Leaverequests
+                .Include(l => l.Employee)
+                .Include(l => l.Leavetype)
                 .FirstOrDefaultAsync(l =>
                     l.leaverequestid == leave.id);
 

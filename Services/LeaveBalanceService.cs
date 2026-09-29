@@ -16,24 +16,29 @@ namespace LeaveManagement.Services
         public async Task<List<LeaveBalanceDTO>> GetLeaveBalance(int employeeId)
         {
             var employeeExists = await _db.Employees.AnyAsync(e => e.EmployeeId == employeeId && e.IsActive==true);
+           
 
             if (!employeeExists)
             {
                 throw new Exception(
                     $"Employee with ID {employeeId} not found or InActive");
             }
-            
+
+
             var balances = await _db.Leavebalances
-                .Where(lb => lb.employeeid == employeeId)
-                .Include(lb=>lb.Leavetype)
-                .Select(lb => new LeaveBalanceDTO
-                {
-                    LeaveType = lb.Leavetype.leavetypename,
-                    TotalDays = lb.totaldays,
-                    UsedDays = lb.useddays,
-                    RemainingDays = lb.totaldays - lb.useddays
-                })
-                .ToListAsync();
+            .Where(lb =>
+            lb.employeeid == employeeId &&
+            lb.Employee!.loginuser!.role=="Employee" &&
+            lb.Leavetype != null &&
+            lb.Leavetype.IsActive)
+            .Select(lb => new LeaveBalanceDTO
+    {
+        LeaveType = lb.Leavetype!.leavetypename,
+        TotalDays = lb.totaldays,
+        UsedDays = lb.useddays,
+        RemainingDays = lb.totaldays - lb.useddays
+    })
+    .ToListAsync();
 
             return balances;
         }

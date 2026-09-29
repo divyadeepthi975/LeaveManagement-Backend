@@ -278,5 +278,109 @@ namespace LeaveManagement.Services
 
             return users;
         }
+ 
+public async Task<EmployeewithIDDTO?> GetEmployeeByIdAsync(
+    int employeeId)
+        {
+            var employee = await _db.Employees
+                .Include(e=>e.loginuser)
+                .FirstOrDefaultAsync(e =>
+                    e.EmployeeId == employeeId);
+
+            if (employee == null)
+            {
+                return null;
+            }
+
+            return new EmployeewithIDDTO
+            {
+                EmployeeId = employee.EmployeeId,
+                EmployeeCode = employee.EmployeeCode,
+                Name = employee.Name,
+                Email = employee.Email,
+                Department = employee.Department,
+                JoiningDate = employee.JoiningDate,
+                IsActive = employee.IsActive,
+                role = employee.loginuser!.role
+            };
+        }
+
+
+        public async Task<EmployeewithIDDTO?> UpdateEmployeeAsync(
+            EmployeewithIDDTO employee)
+        {
+            var existingEmployee = await _db.Employees
+                .Include(e=>e.loginuser)
+                .FirstOrDefaultAsync(e =>
+                    e.EmployeeId == employee.EmployeeId);
+
+            if (existingEmployee == null)
+            {
+                return null;
+            }
+
+            if (!existingEmployee.IsActive)
+            {
+                throw new ArgumentException(
+                    "Employee is inactive.");
+            }
+
+            // Check Employee Code
+            var employeeCodeExists = await _db.Employees
+                .AnyAsync(e =>
+                    e.EmployeeId != employee.EmployeeId &&
+                    e.EmployeeCode == employee.EmployeeCode);
+
+            if (employeeCodeExists)
+            {
+                throw new ArgumentException(
+                    "Employee code already exists.");
+            }
+
+            // Check Email
+            var emailExists = await _db.Employees
+                .AnyAsync(e =>
+                    e.EmployeeId != employee.EmployeeId &&
+                    e.Email == employee.Email);
+
+            if (emailExists)
+            {
+                throw new ArgumentException(
+                    "Email already exists.");
+            }
+
+            existingEmployee.EmployeeCode =
+                employee.EmployeeCode;
+
+            existingEmployee.Name =
+                employee.Name;
+
+            existingEmployee.Email =
+                employee.Email;
+
+            existingEmployee.Department =
+                employee.Department;
+
+            existingEmployee.JoiningDate =
+                employee.JoiningDate;
+
+            await _db.SaveChangesAsync();
+
+            return new EmployeewithIDDTO
+            {
+                EmployeeId = existingEmployee.EmployeeId,
+                EmployeeCode = existingEmployee.EmployeeCode,
+                Name = existingEmployee.Name,
+                Email = existingEmployee.Email,
+                Department = existingEmployee.Department,
+                JoiningDate = existingEmployee.JoiningDate,
+                IsActive = existingEmployee.IsActive,
+                role = existingEmployee.loginuser!.role
+            };
+        }
+
+
+
+
     }
 }

@@ -28,7 +28,6 @@ namespace LeaveManagement.Services
             await _db.SaveChangesAsync();
 
             var employees = await _db.Employees 
-            .Where(e => e.IsActive==true)
             .ToListAsync();
             foreach (var employee in employees)
             {
@@ -59,7 +58,7 @@ namespace LeaveManagement.Services
             }
             objLeavetype.IsActive = false;
             await _db.SaveChangesAsync();
-            return $"leavetype with the id-{id} is successfully deleted";
+            return $"leavetype with the id-{id} is successfully deleted/deactivated";
         }
 
         public async Task<IEnumerable<Leavetype>> GetAllLeavetypeAsync()
@@ -78,12 +77,16 @@ namespace LeaveManagement.Services
 
         }
 
-        public async Task<Leavetype?> UpdateLeavetypeAsync(LeavetypeIsactiveDTO leavetype)
+        public async Task<object?> UpdateLeavetypeAsync(LeavetypeIsactiveDTO leavetype)
         {
             var objLeavetype = await _db.Leavetypes.FirstOrDefaultAsync(l => l.leavetypeid == leavetype.leavetypeid);
             if (objLeavetype == null)
             {
                 return null;
+            }
+            if(objLeavetype.IsActive== true & leavetype.IsActive==false)
+            {
+                return "You can't deactivate leavetype with this method.";
             }
             objLeavetype.leavetypeid = leavetype.leavetypeid;
             objLeavetype.leavetypename = leavetype.leavetypename;

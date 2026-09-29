@@ -166,5 +166,77 @@ namespace LeaveManagement.Controllers
                 return BadRequest(ex.Message);
             }
         }
+
+
+[Authorize(Roles = "Admin")]
+[HttpGet("employees/{employeeId}")]
+public async Task<IActionResult> GetEmployeeById(
+    int employeeId)
+        {
+            try
+            {
+                var employee =
+                    await _adminService.GetEmployeeByIdAsync(
+                        employeeId);
+
+                if (employee == null)
+                {
+                    return NotFound(
+                        "Employee not found.");
+                }
+
+                return Ok(employee);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+
+
+        [Authorize(Roles = "Admin")]
+        [HttpPut("employees/{employeeId}")]
+        public async Task<IActionResult> UpdateEmployee(
+            int employeeId,
+            [FromBody] EmployeewithIDDTO employee)
+        {
+            try
+            {
+                if (employeeId != employee.EmployeeId)
+                {
+                    return BadRequest(
+                        "Employee ID in URL and request body do not match.");
+                }
+                if (employeeId == 1)
+                {
+                    return BadRequest(
+                        "You can't edit this employee");
+                }
+
+                var result =
+                    await _adminService.UpdateEmployeeAsync(
+                        employee);
+
+                if (result == null)
+                {
+                    return NotFound(
+                        "Employee not found.");
+                }
+
+                return Ok(result);
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(ex.Message);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+
+
+
+
     }
 }

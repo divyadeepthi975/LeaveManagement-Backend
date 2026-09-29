@@ -199,7 +199,7 @@ namespace LeaveManagement.Services
 
 
         // UPDATE EMPLOYEE
-        public async Task<EmployeewithIDDTO?> UpdateAsync(
+        public async Task<object?> UpdateAsync(
             EmployeewithIDDTO employee)
         {
             var emp = await _db.Employees
@@ -209,6 +209,10 @@ namespace LeaveManagement.Services
             if (emp == null)
             {
                 return null;
+            }
+            if(emp.IsActive==true && employee.IsActive == false)
+            {
+                return "Employee can't be deactivated with this put method";
             }
             var loginuser=await _db.Loginuser.FirstOrDefaultAsync(l=>l.employeeid == employee.EmployeeId);
 

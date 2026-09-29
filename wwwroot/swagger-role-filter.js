@@ -1,8 +1,8 @@
-﻿(function () {
+﻿
+(function () {
     "use strict";
 
     console.log("Swagger role filter loaded.");
-
 
     // =========================================================
     // NORMALIZE ROUTE
@@ -20,7 +20,7 @@
         // Remove trailing slash
         path = path.replace(/\/+$/, "");
 
-        // Convert route parameters to lowercase
+        // Normalize route parameters
         path = path.replace(
             /\{([^}]+)\}/g,
             function (_, parameter) {
@@ -28,7 +28,7 @@
             }
         );
 
-        // Route itself is case-insensitive
+        // Route matching is case-insensitive
         path = path.toLowerCase();
 
         return method + ":" + path;
@@ -57,7 +57,7 @@
 
 
     // =========================================================
-    // PUBLIC APIs
+    // PUBLIC ROUTES
     // =========================================================
     const publicRoutes = new Set([
         "POST:/api/login/login"
@@ -65,123 +65,212 @@
 
 
     // =========================================================
-    // ADMIN ONLY APIs
+    // ROLE BASED API ACCESS
+    //
+    // Every API is defined ONCE.
+    //
+    // This prevents clashes such as:
+    // Admin + Manager
+    // Manager + Employee
+    // Admin + Manager + Employee
     // =========================================================
-    const adminOnlyRoutes = new Set([
+    const routeAccess = {
 
-        // Create Employee
-        "POST:/api/admin/employees",
+        // =====================================================
+        // ADMIN CONTROLLER
+        // =====================================================
 
-        // Create Manager
-        "POST:/api/admin/managers",
+        "POST:/api/admin/employees": [
+            "admin"
+        ],
 
-        // Get All Users
-        "GET:/api/admin/users",
+        "POST:/api/admin/managers": [
+            "admin"
+        ],
 
-        // Change Employee -> Manager
-        "PUT:/api/admin/users/{employeeid}/change-to-manager",
+        "GET:/api/admin/users": [
+            "admin"
+        ],
 
-        // Change Manager -> Employee
-        "PUT:/api/admin/users/{employeeid}/change-to-employee",
+        "PUT:/api/admin/users/{employeeid}/change-to-manager": [
+            "admin"
+        ],
 
-        // Activate / Deactivate User
-        "PUT:/api/admin/users/{employeeid}/status",
-        "GET:/api/dashboard/leave-summary",
-        "GET:/api/employee/me",
-        "POST:/api/leavetypes/create-leavetype",
-        "PUT:/api/leavetypes/update-leavetype/{id}",
-        "DELETE:/api/leavetypes/delete-leavetype/{id}",
+        "PUT:/api/admin/users/{employeeid}/change-to-employee": [
+            "admin"
+        ],
 
-    ]);
+        "PUT:/api/admin/users/{employeeid}/status": [
+            "admin"
+        ],
+        
+        " GET :/ api / admin / employees / { employeeId }":[
+            "admin"
+       ],
+        "PUT :/ api / admin / employees / { employeeId }":[
+            "admin"
+    ],
+
+        // =====================================================
+        // DASHBOARD
+        // Manager + Admin
+        // =====================================================
+
+        "GET:/api/dashboard/leave-summary": [
+            "admin",
+            "manager"
+        ],
+
+
+        // =====================================================
+        // EMPLOYEE CONTROLLER
+        // =====================================================
+
+        // Manager only
+        "POST:/api/employee/createemployee": [
+            "manager"
+        ],
+
+        // Manager only
+        "GET:/api/employee": [
+            "manager"
+        ],
+
+        // Manager 
+        "GET:/api/employee/getbyid/{id}": [
+            "manager"
+        ],
+
+        // Admin + Manager + Employee
+        "GET:/api/employee/me": [
+            "admin",
+            "manager",
+            "employee"
+        ],
+
+        // Manager + Employee
+        "PUT:/api/employee/updateemployee/{id}": [
+            "manager",
+            "employee"
+        ],
+
+        // Manager only
+        "DELETE:/api/employee/{id}": [
+            "manager"
+        ],
+
+
+        // =====================================================
+        // LEAVE BALANCE
+        // Manager + Employee
+        // =====================================================
+
+        "GET:/api/employees/{employeeid}/leave-balance": [
+            "manager",
+            "employee"
+        ],
+
+
+        // =====================================================
+        // LEAVES
+        // =====================================================
+
+        // Employee only
+        "POST:/api/leaves": [
+            "employee"
+        ],
+
+        // Manager + Employee
+        "GET:/api/leaves": [
+            "manager",
+            "employee"
+        ],
+
+        // Manager + Employee
+        "GET:/api/leaves/{id}": [
+            "manager",
+            "employee"
+        ],
+
+        // Manager + Employee
+        "GET:/api/employees/{employeeid}/leaves": [
+            "manager",
+            "employee"
+        ],
+
+        // Manager only
+        "PUT:/api/leaves/{id}/approve": [
+            "manager"
+        ],
+
+        // Manager only
+        "PUT:/api/leaves/{id}/reject": [
+            "manager"
+        ],
+
+
+        // =====================================================
+        // LEAVE TYPES
+        // =====================================================
+
+        // Admin + Manager + Employee
+        "GET:/api/leavetypes/getall": [
+            "admin",
+            "manager",
+            "employee"
+        ],
+
+        // Admin + Manager + Employee
+        "GET:/api/leavetypes/get-by-id/{id}": [
+            "admin",
+            "manager",
+            "employee"
+        ],
+
+        // Admin + Manager
+        "POST:/api/leavetypes/create-leavetype": [
+            "admin",
+            "manager"
+        ],
+
+        // Admin + Manager
+        "PUT:/api/leavetypes/update-leavetype/{id}": [
+            "admin",
+            "manager"
+        ],
+
+        // Admin + Manager
+        "DELETE:/api/leavetypes/delete-leavetype/{id}": [
+            "admin",
+            "manager"
+        ]
+    };
 
 
     // =========================================================
-    // MANAGER ONLY APIs
-    // =========================================================
-    const managerOnlyRoutes = new Set([
-
-        // Dashboard
-        "GET:/api/dashboard/leave-summary",
-
-        // Employees
-        "GET:/api/employee",
-        "DELETE:/api/employee/{id}",
-        "GET:/api/employee/me",
-        "POST:/api/employee/Createemployee",
-
-        // Leaves
-        "GET:/api/leaves",
-        "PUT:/api/leaves/{id}/approve",
-        "PUT:/api/leaves/{id}/reject",
-
-        // Leave Types
-        "POST:/api/leavetypes/create-leavetype",
-        "PUT:/api/leavetypes/update-leavetype/{id}",
-    ]);
-
-
-    // =========================================================
-    // EMPLOYEE ONLY APIs
-    // =========================================================
-    const employeeOnlyRoutes = new Set([
-
-        // Employee's own details
-        "GET:/api/employee/me",
-
-        // Apply leave
-        "POST:/api/leaves"
-    ]);
-
-
-    // =========================================================
-    // SHARED APIs
-    // =========================================================
-    const sharedRoutes = new Set([
-
-        // Employee
-        "GET:/api/employee/{id}",
-        "PUT:/api/employee/{id}",
-
-        // Leave Types
-        "GET:/api/leavetypes/getall",
-        "GET:/api/leavetypes/get-by-id/{id}",
-
-        // Leave Balance
-        "GET:/api/employees/{employeeid}/leave-balance",
-
-        // Leaves
-        "GET:/api/leaves/{id}",
-        "GET:/api/employees/{employeeid}/leaves"
-    ]);
-
-
-    // =========================================================
-    // NORMALIZE ALL ROUTE SETS
+    // NORMALIZE PUBLIC ROUTES
     // =========================================================
     const normalizedPublicRoutes =
         new Set(
             [...publicRoutes].map(normalizeRouteKey)
         );
 
-    const normalizedAdminOnlyRoutes =
-        new Set(
-            [...adminOnlyRoutes].map(normalizeRouteKey)
-        );
 
-    const normalizedManagerOnlyRoutes =
-        new Set(
-            [...managerOnlyRoutes].map(normalizeRouteKey)
-        );
+    // =========================================================
+    // NORMALIZE ROLE ACCESS MAP
+    // =========================================================
+    const normalizedRouteAccess = {};
 
-    const normalizedEmployeeOnlyRoutes =
-        new Set(
-            [...employeeOnlyRoutes].map(normalizeRouteKey)
-        );
+    Object.keys(routeAccess).forEach(route => {
 
-    const normalizedSharedRoutes =
-        new Set(
-            [...sharedRoutes].map(normalizeRouteKey)
-        );
+        const normalizedRoute =
+            normalizeRouteKey(route);
+
+        normalizedRouteAccess[normalizedRoute] =
+            routeAccess[route].map(role =>
+                role.toLowerCase()
+            );
+    });
 
 
     // =========================================================
@@ -191,7 +280,8 @@
 
         try {
 
-            const parts = token.split(".");
+            const parts =
+                token.split(".");
 
             if (parts.length !== 3) {
                 return null;
@@ -207,7 +297,9 @@
                 payload += "=";
             }
 
-            return JSON.parse(atob(payload));
+            return JSON.parse(
+                atob(payload)
+            );
 
         }
         catch (error) {
@@ -227,7 +319,8 @@
     // =========================================================
     function getRoleFromJwt(token) {
 
-        const payload = decodeJwt(token);
+        const payload =
+            decodeJwt(token);
 
         if (!payload) {
             return null;
@@ -238,22 +331,33 @@
             payload
         );
 
+
         let role =
             payload.role ||
             payload.Role ||
             payload.roles ||
             payload.Roles ||
             payload[
-            "http://schemas.microsoft.com/ws/2008/06/identity/claims/role"
+                "http://schemas.microsoft.com/ws/2008/06/identity/claims/role"
             ];
 
+
+        // Handle array of roles
         if (Array.isArray(role)) {
+
             role = role[0];
         }
 
+
         if (!role) {
+
+            console.warn(
+                "No role found in JWT."
+            );
+
             return null;
         }
+
 
         return String(role)
             .trim()
@@ -272,61 +376,80 @@
                 return null;
             }
 
+
             const state =
                 window.ui.getState();
 
             const auth =
                 state.get("auth");
 
+
             if (!auth) {
                 return null;
             }
 
+
             const authorized =
                 auth.get("authorized");
+
 
             if (
                 !authorized ||
                 authorized.size === 0
             ) {
+
                 return null;
             }
 
+
             const authorizedObject =
                 authorized.toJS();
+
 
             console.log(
                 "Swagger authorized object:",
                 authorizedObject
             );
 
+
             const bearer =
                 authorizedObject.Bearer ||
                 authorizedObject.bearer;
+
 
             if (!bearer) {
                 return null;
             }
 
+
             let token = null;
 
+
             if (typeof bearer === "string") {
+
                 token = bearer;
+
             }
             else if (bearer.value) {
+
                 token = bearer.value;
+
             }
             else if (bearer.schema) {
+
                 token = bearer.schema;
             }
+
 
             if (!token) {
                 return null;
             }
 
+
             token = token
                 .replace(/^Bearer\s+/i, "")
                 .trim();
+
 
             return token;
 
@@ -358,18 +481,22 @@
                 ".opblock-summary-method"
             );
 
+
         if (
             !pathElement ||
             !methodElement
         ) {
+
             return null;
         }
+
 
         const method =
             methodElement.textContent;
 
         const path =
             pathElement.textContent;
+
 
         return normalizeRoute(
             method,
@@ -390,9 +517,11 @@
                 const key =
                     getOperationKey(operation);
 
+
                 if (!key) {
                     return;
                 }
+
 
                 if (
                     normalizedPublicRoutes.has(key)
@@ -403,13 +532,35 @@
                 }
                 else {
 
-                    operation.style.display =
-                        "none";
+                    operation.style.display = "none";
                 }
 
             });
 
+
         removeEmptyTags();
+    }
+
+
+    // =========================================================
+    // CHECK WHETHER ROLE CAN ACCESS ROUTE
+    // =========================================================
+    function canRoleAccessRoute(
+        role,
+        routeKey
+    ) {
+
+        const allowedRoles =
+            normalizedRouteAccess[routeKey];
+
+
+        if (!allowedRoles) {
+
+            return false;
+        }
+
+
+        return allowedRoles.includes(role);
     }
 
 
@@ -422,6 +573,7 @@
             document.querySelectorAll(
                 ".opblock"
             );
+
 
         if (operations.length === 0) {
             return;
@@ -441,8 +593,9 @@
         if (!token) {
 
             console.log(
-                "No JWT -> public APIs only"
+                "No JWT -> showing public APIs only."
             );
+
 
             hideAllProtectedOperations();
 
@@ -456,6 +609,7 @@
         const role =
             getRoleFromJwt(token);
 
+
         console.log(
             "Swagger detected role:",
             role
@@ -468,8 +622,9 @@
         if (!role) {
 
             console.warn(
-                "Role not found -> protected APIs hidden"
+                "Role not found -> protected APIs hidden."
             );
+
 
             hideAllProtectedOperations();
 
@@ -478,16 +633,18 @@
 
 
         // =====================================================
-        // PROCESS APIs
+        // PROCESS EVERY API
         // =====================================================
         operations.forEach(operation => {
 
             const key =
                 getOperationKey(operation);
 
+
             if (!key) {
                 return;
             }
+
 
             console.log(
                 "Swagger API:",
@@ -496,7 +653,7 @@
 
 
             // =================================================
-            // PUBLIC
+            // PUBLIC API
             // =================================================
             if (
                 normalizedPublicRoutes.has(key)
@@ -509,117 +666,41 @@
 
 
             // =================================================
-            // ADMIN ONLY
+            // PROTECTED API
             // =================================================
             if (
-                normalizedAdminOnlyRoutes.has(key)
+                canRoleAccessRoute(
+                    role,
+                    key
+                )
             ) {
 
-                if (
-                    role === "admin"
-                ) {
+                console.log(
+                    "SHOW:",
+                    key,
+                    "for role:",
+                    role
+                );
 
-                    operation.style.display = "";
 
-                }
-                else {
-
-                    operation.style.display =
-                        "none";
-                }
+                operation.style.display = "";
 
                 return;
             }
 
 
             // =================================================
-            // MANAGER ONLY
+            // UNKNOWN OR UNAUTHORIZED API
             // =================================================
-            if (
-                normalizedManagerOnlyRoutes.has(key)
-            ) {
-
-                if (
-                    role === "manager"
-                ) {
-
-                    operation.style.display = "";
-
-                }
-                else {
-
-                    operation.style.display =
-                        "none";
-                }
-
-                return;
-            }
-
-
-            // =================================================
-            // EMPLOYEE ONLY
-            // =================================================
-            if (
-                normalizedEmployeeOnlyRoutes.has(key)
-            ) {
-
-                if (
-                    role === "employee"
-                ) {
-
-                    operation.style.display = "";
-
-                }
-                else {
-
-                    operation.style.display =
-                        "none";
-                }
-
-                return;
-            }
-
-
-            // =================================================
-            // SHARED
-            // =================================================
-            if (
-                normalizedSharedRoutes.has(key)
-            ) {
-
-                /*
-                 * Both Manager and Employee
-                 * can see shared APIs.
-                 */
-
-                if (
-                    role === "manager" ||
-                    role === "employee"
-                ) {
-
-                    operation.style.display = "";
-
-                }
-                else {
-
-                    operation.style.display =
-                        "none";
-                }
-
-                return;
-            }
-
-
-            // =================================================
-            // UNKNOWN
-            // =================================================
-            console.warn(
-                "Unknown API hidden:",
-                key
+            console.log(
+                "HIDE:",
+                key,
+                "for role:",
+                role
             );
 
-            operation.style.display =
-                "none";
+
+            operation.style.display = "none";
 
         });
 
@@ -644,11 +725,14 @@
                         ".opblock"
                     );
 
+
                 if (
                     operations.length === 0
                 ) {
+
                     return;
                 }
+
 
                 const visibleOperations =
                     Array.from(
@@ -658,19 +742,17 @@
                             operation.style.display !== "none"
                     );
 
+
                 if (
                     visibleOperations.length === 0
                 ) {
 
-                    tag.style.display =
-                        "none";
+                    tag.style.display = "none";
 
                 }
                 else {
 
-                    tag.style.display =
-                        "";
-
+                    tag.style.display = "";
                 }
 
             });
@@ -682,6 +764,7 @@
     // =========================================================
     let updating = false;
 
+
     const observer =
         new MutationObserver(() => {
 
@@ -689,7 +772,9 @@
                 return;
             }
 
+
             updating = true;
+
 
             setTimeout(() => {
 
@@ -711,6 +796,7 @@
             return;
         }
 
+
         observer.observe(
             document.body,
             {
@@ -718,6 +804,7 @@
                 subtree: true
             }
         );
+
 
         updateVisibility();
     }
@@ -740,12 +827,11 @@
     else {
 
         startObserver();
-
     }
 
 
     // =========================================================
-    // CHECK EVERY SECOND
+    // CHECK PERIODICALLY
     // =========================================================
     setInterval(
         updateVisibility,
@@ -753,3 +839,4 @@
     );
 
 })();
+

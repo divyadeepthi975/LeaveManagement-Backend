@@ -12,5 +12,9 @@ namespace LeaveManagement.Services
 
         Task<bool> ChangeStatusAsync(int employeeId,ChangeStatusDTO dto);
         Task<List<GetAllEmployeesDTO>> GetAllUsersAsync();
+        Task<EmployeewithIDDTO?> GetEmployeeByIdAsync(int employeeId);
+
+        Task<EmployeewithIDDTO?> UpdateEmployeeAsync(
+            EmployeewithIDDTO employee);
     }
 }

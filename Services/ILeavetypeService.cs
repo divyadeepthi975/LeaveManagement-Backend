@@ -13,6 +13,6 @@ namespace LeaveManagement.Services
 
         Task<Leavetype?> GetLeavetypeAsync(int id);
 
-        Task<Leavetype?> UpdateLeavetypeAsync(LeavetypeIsactiveDTO leavetype);
+        Task<object?> UpdateLeavetypeAsync(LeavetypeIsactiveDTO leavetype);
     }
 }
