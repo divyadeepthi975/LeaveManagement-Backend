@@ -1,3 +1,4 @@
 <Solution>
+  <Project Path="../LeaveManagement.Mobile/LeaveManagement.Mobile.csproj" Id="f1b53f24-b20e-44c6-8fb3-1437d005df1d" />
   <Project Path="LeaveManagement.csproj" />
 </Solution>

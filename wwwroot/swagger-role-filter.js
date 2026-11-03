@@ -92,22 +92,22 @@
             "admin"
         ],
 
-        "PUT:/api/admin/users/{employeeid}/change-to-manager": [
+        "PUT:/api/admin/users/{userid}/change-to-manager": [
             "admin"
         ],
 
-        "PUT:/api/admin/users/{employeeid}/change-to-employee": [
+        "PUT:/api/admin/users/{userid}/change-to-employee": [
             "admin"
         ],
 
-        "PUT:/api/admin/users/{employeeid}/status": [
+        "PUT:/api/admin/users/{userid}/status": [
             "admin"
         ],
         
-        " GET :/ api / admin / employees / { employeeId }":[
+        "GET:/api/admin/employees/{userid}":[
             "admin"
        ],
-        "PUT :/ api / admin / employees / { employeeId }":[
+        "PUT:/api/admin/employees/{userid}":[
             "admin"
     ],
 

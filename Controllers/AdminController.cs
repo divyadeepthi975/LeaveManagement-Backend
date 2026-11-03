@@ -84,7 +84,7 @@ namespace LeaveManagement.Controllers
         }
 
         [Authorize(Roles = "Admin")]
-        [HttpPut("users/{employeeId}/change-to-manager")]
+        [HttpPut("users/{UserId}/change-to-manager")]
         public async Task<IActionResult> ChangeToManager(
             int employeeId)
         {
@@ -108,36 +108,36 @@ namespace LeaveManagement.Controllers
             }
         }
 
+        //[Authorize(Roles = "Admin")]
+
+        //[HttpPut("users/{UserId}/change-to-employee")]
+        //public async Task<IActionResult> ChangeToEmployee(
+        //    int employeeId)
+        //{
+        //    try
+        //    {
+        //        var result =
+        //            await _adminService.ChangeToEmployeeAsync(
+        //                employeeId);
+
+        //        if (!result)
+        //        {
+        //            return NotFound("User not found.");
+        //        }
+
+        //        return Ok(
+        //            "User role changed to Employee successfully.");
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        return BadRequest(ex.Message);
+        //    }
+        //}
+
+
         [Authorize(Roles = "Admin")]
 
-        [HttpPut("users/{employeeId}/change-to-employee")]
-        public async Task<IActionResult> ChangeToEmployee(
-            int employeeId)
-        {
-            try
-            {
-                var result =
-                    await _adminService.ChangeToEmployeeAsync(
-                        employeeId);
-
-                if (!result)
-                {
-                    return NotFound("User not found.");
-                }
-
-                return Ok(
-                    "User role changed to Employee successfully.");
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(ex.Message);
-            }
-        }
-
-
-        [Authorize(Roles = "Admin")]
-
-        [HttpPut("users/{employeeId}/status")]
+        [HttpPut("users/{UserId}/status")]
         public async Task<IActionResult> ChangeStatus(
             int employeeId,
             [FromBody] ChangeStatusDTO dto)
@@ -169,7 +169,7 @@ namespace LeaveManagement.Controllers
 
 
 [Authorize(Roles = "Admin")]
-[HttpGet("employees/{employeeId}")]
+[HttpGet("employees/{UserId}")]
 public async Task<IActionResult> GetEmployeeById(
     int employeeId)
         {
@@ -195,7 +195,7 @@ public async Task<IActionResult> GetEmployeeById(
 
 
         [Authorize(Roles = "Admin")]
-        [HttpPut("employees/{employeeId}")]
+        [HttpPut("employees/{UserId}")]
         public async Task<IActionResult> UpdateEmployee(
             int employeeId,
             [FromBody] EmployeewithIDDTO employee)
