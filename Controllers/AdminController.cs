@@ -289,6 +289,22 @@ public async Task<IActionResult> GetEmployeeById(
         }
 
         [Authorize(Roles = "Admin")]
+        [HttpPut("leave-types/{id}/activate")]
+        public async Task<IActionResult> ActivateLeaveType(int id)
+        {
+            var result = await _leavetypeService.SetActiveStatusAsync(id, true);
+            return Ok(result);
+        }
+
+        [Authorize(Roles = "Admin")]
+        [HttpPut("leave-types/{id}/deactivate")]
+        public async Task<IActionResult> DeactivateLeaveType(int id)
+        {
+            var result = await _leavetypeService.SetActiveStatusAsync(id, false);
+            return Ok(result);
+        }
+
+        [Authorize(Roles = "Admin")]
         [HttpDelete("leave-types/{id}")]
         public async Task<IActionResult> DeleteLeaveType(int id)
         {

@@ -14,5 +14,7 @@ namespace LeaveManagement.Services
         Task<Leavetype?> GetLeavetypeAsync(int id);
 
         Task<object?> UpdateLeavetypeAsync(LeavetypeIsactiveDTO leavetype);
+
+        Task<string> SetActiveStatusAsync(int id, bool isActive);
     }
 }

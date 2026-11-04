@@ -96,5 +96,28 @@ namespace LeaveManagement.Services
             return objLeavetype;
 
         }
+
+        public async Task<string> SetActiveStatusAsync(int id, bool isActive)
+        {
+            var objLeavetype = await _db.Leavetypes.FirstOrDefaultAsync(l => l.leavetypeid == id);
+            if (objLeavetype == null)
+            {
+                return "leavetype with this ID doesnt exists";
+            }
+
+            if (objLeavetype.IsActive == isActive)
+            {
+                return isActive
+                    ? "leavetype with this id is already active"
+                    : "leavetype with this id is already inactive";
+            }
+
+            objLeavetype.IsActive = isActive;
+            await _db.SaveChangesAsync();
+
+            return isActive
+                ? $"leavetype with the id-{id} is successfully activated"
+                : $"leavetype with the id-{id} is successfully deactivated";
+        }
     }
 }
