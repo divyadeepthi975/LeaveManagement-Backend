@@ -11,10 +11,12 @@ namespace LeaveManagement.Controllers
     public class AdminController : ControllerBase
     {
         private readonly IAdminService _adminService;
+        private readonly ILeavetypeService _leavetypeService;
 
-        public AdminController(IAdminService adminService)
+        public AdminController(IAdminService adminService, ILeavetypeService leavetypeService)
         {
             _adminService = adminService;
+            _leavetypeService = leavetypeService;
         }
 
 
@@ -235,8 +237,63 @@ public async Task<IActionResult> GetEmployeeById(
             }
         }
 
+        [Authorize(Roles = "Admin")]
+        [HttpGet("leave-types")]
+        public async Task<IActionResult> GetLeaveTypes()
+        {
+            var leaveTypes = await _leavetypeService.GetAllLeavetypeAsync();
+            return Ok(leaveTypes);
+        }
 
+        [Authorize(Roles = "Admin")]
+        [HttpPost("leave-types")]
+        public async Task<IActionResult> CreateLeaveType([FromBody] LeavetypeDTO leaveType)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
 
+            try
+            {
+                var created = await _leavetypeService.AddAsync(leaveType);
+                return CreatedAtAction(nameof(GetLeaveTypes), new { id = created.leavetypeid }, created);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
 
+        [Authorize(Roles = "Admin")]
+        [HttpPut("leave-types/{id}")]
+        public async Task<IActionResult> UpdateLeaveType(int id, [FromBody] LeavetypeIsactiveDTO leaveType)
+        {
+            if (id != leaveType.leavetypeid)
+            {
+                return BadRequest("ID in URL and request body do not match.");
+            }
+
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
+            var updated = await _leavetypeService.UpdateLeavetypeAsync(leaveType);
+            if (updated == null)
+            {
+                return NotFound($"Leavetype with this ID-{id} not found.");
+            }
+
+            return Ok(updated);
+        }
+
+        [Authorize(Roles = "Admin")]
+        [HttpDelete("leave-types/{id}")]
+        public async Task<IActionResult> DeleteLeaveType(int id)
+        {
+            var result = await _leavetypeService.DeleteAsync(id);
+            return Ok(result);
+        }
     }
 }
