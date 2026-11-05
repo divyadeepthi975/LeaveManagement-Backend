@@ -13,15 +13,17 @@ namespace LeaveManagement.Services
             int? leaveTypeId = null,
             string? status = null,
             DateTime? fromDate = null,
-            DateTime? toDate = null);
+            DateTime? toDate = null,
+            int? managerId = null);
 
         Task<IEnumerable<LeaveRequestGetDTO>> GetEmployeeLeavesAsync(
-            int employeeId);
+            int employeeId,
+            int? managerId = null);
 
-        Task<LeaveRequestGetDTO?> GetLeaveByIdAsync(int id);
+        Task<LeaveRequestGetDTO?> GetLeaveByIdAsync(int id, int? managerId = null);
 
-        Task<string?> ApproveLeaveAsync(LeaveActionDTO leave);
+        Task<string?> ApproveLeaveAsync(LeaveActionDTO leave, int managerId);
 
-        Task<string?> RejectLeaveAsync(LeaveActionDTO leave);
+        Task<string?> RejectLeaveAsync(LeaveActionDTO leave, int managerId);
     }
 }

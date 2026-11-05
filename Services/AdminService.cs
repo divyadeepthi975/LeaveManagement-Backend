@@ -17,6 +17,68 @@ namespace LeaveManagement.Services
             _passwordHasher = new PasswordHasher<Loginusers>();
         }
 
+        private async Task<int> GetAnyAdminEmployeeIdAsync()
+        {
+            var adminEmployeeIds = await _db.Loginuser
+                .Where(x => x.role == "Admin")
+                .Select(x => x.employeeid)
+                .ToListAsync();
+
+            if (adminEmployeeIds.Count == 0)
+            {
+                throw new Exception("Admin user not found to assign manager hierarchy.");
+            }
+
+            if (adminEmployeeIds.Count > 1)
+            {
+                throw new Exception("Invalid setup: multiple admin users found.");
+            }
+
+            return adminEmployeeIds[0];
+        }
+
+        private async Task<int> ResolveRequiredManagerIdAsync(
+            int? managerId,
+            bool adminOnly)
+        {
+            if (!managerId.HasValue)
+            {
+                throw new Exception("Manager id is required.");
+            }
+
+            var manager = await _db.Employees
+                .Include(e => e.loginuser)
+                .FirstOrDefaultAsync(e =>
+                    e.EmployeeId == managerId.Value &&
+                    e.IsActive);
+
+            if (manager == null)
+            {
+                throw new Exception("Manager not found or inactive.");
+            }
+
+            if (manager.loginuser == null)
+            {
+                throw new Exception("Invalid manager id.");
+            }
+
+            if (adminOnly)
+            {
+                if (!manager.loginuser.role.Equals("Admin", StringComparison.OrdinalIgnoreCase))
+                {
+                    throw new Exception("Invalid manager id. Manager users must report to an admin.");
+                }
+
+                return managerId.Value;
+            }
+
+            if (!manager.loginuser.role.Equals("Manager", StringComparison.OrdinalIgnoreCase))
+            {
+                throw new Exception("Invalid manager id. Employees must report to a manager.");
+            }
+
+            return managerId.Value;
+        }
 
         public async Task<EmployeewithIDDTO> CreateUserAsync(
     CreateUserDTO dto,
@@ -78,6 +140,10 @@ namespace LeaveManagement.Services
 
                 await _db.SaveChangesAsync();
 
+                var resolvedManagerId = role == "Manager"
+                    ? await ResolveRequiredManagerIdAsync(dto.ManagerId, adminOnly: true)
+                    : await ResolveRequiredManagerIdAsync(dto.ManagerId, adminOnly: false);
+
                 var emp = new Employee
                 {
                     EmployeeId = loginUser.employeeid,
@@ -88,6 +154,7 @@ namespace LeaveManagement.Services
                     Department = dto.Department,
                     JoiningDate = dto.JoiningDate,
                     IsActive = true,
+                    ManagerId = resolvedManagerId,
                     loginuser=loginUser
                 };
 
@@ -133,6 +200,11 @@ namespace LeaveManagement.Services
                     Department = emp.Department,
                     JoiningDate = emp.JoiningDate,
                     IsActive = emp.IsActive,
+                    ManagerId = emp.ManagerId,
+                    ManagerName = await _db.Employees
+                        .Where(e => e.EmployeeId == emp.ManagerId)
+                        .Select(e => e.Name)
+                        .FirstOrDefaultAsync(),
                     role = loginUser.role
 
                 };
@@ -154,6 +226,20 @@ namespace LeaveManagement.Services
             {
                 return false;
             }
+
+            var employee = await _db.Employees
+                .FirstOrDefaultAsync(x => x.EmployeeId == employeeId);
+
+            if (employee == null)
+            {
+                return false;
+            }
+
+            if (!employee.IsActive)
+            {
+                throw new Exception("Inactive user role cannot be changed.");
+            }
+
             if (loginUser.role.Equals(
                 "Admin",
                 StringComparison.OrdinalIgnoreCase))
@@ -175,6 +261,8 @@ namespace LeaveManagement.Services
 
             loginUser.role = "Manager";
 
+            employee.ManagerId = await GetAnyAdminEmployeeIdAsync();
+
             await _db.SaveChangesAsync();
 
             return true;
@@ -182,7 +270,8 @@ namespace LeaveManagement.Services
 
 
         public async Task<bool> ChangeToEmployeeAsync(
-            int employeeId)
+            int employeeId,
+            int managerId)
         {
             var loginUser = await _db.Loginuser
                 .FirstOrDefaultAsync(
@@ -191,6 +280,19 @@ namespace LeaveManagement.Services
             if (loginUser == null)
             {
                 return false;
+            }
+
+            var employee = await _db.Employees
+                .FirstOrDefaultAsync(x => x.EmployeeId == employeeId);
+
+            if (employee == null)
+            {
+                return false;
+            }
+
+            if (!employee.IsActive)
+            {
+                throw new Exception("Inactive user role cannot be changed.");
             }
 
             if (loginUser.role.Equals(
@@ -212,7 +314,18 @@ namespace LeaveManagement.Services
             }
 
 
+            var resolvedManagerId = await ResolveRequiredManagerIdAsync(
+                managerId,
+                adminOnly: false);
+
+            if (resolvedManagerId == employeeId)
+            {
+                throw new Exception("Employee cannot be their own manager.");
+            }
+
             loginUser.role = "Employee";
+
+            employee.ManagerId = resolvedManagerId;
 
             await _db.SaveChangesAsync();
 
@@ -272,7 +385,9 @@ namespace LeaveManagement.Services
                     Department = employee.Department,
                     JoiningDate = employee.JoiningDate,
                     Role = employee.loginuser!.role,
-                    IsActive = employee.IsActive
+                    IsActive = employee.IsActive,
+                    ManagerId = employee.ManagerId,
+                    ManagerName = employee.Manager != null ? employee.Manager.Name : null
                 })
                 .ToListAsync();
 
@@ -283,7 +398,8 @@ public async Task<EmployeewithIDDTO?> GetEmployeeByIdAsync(
     int employeeId)
         {
             var employee = await _db.Employees
-                .Include(e=>e.loginuser)
+                .Include(e => e.loginuser)
+                .Include(e => e.Manager)
                 .FirstOrDefaultAsync(e =>
                     e.EmployeeId == employeeId);
 
@@ -301,6 +417,8 @@ public async Task<EmployeewithIDDTO?> GetEmployeeByIdAsync(
                 Department = employee.Department,
                 JoiningDate = employee.JoiningDate,
                 IsActive = employee.IsActive,
+                ManagerId = employee.ManagerId,
+                ManagerName = employee.Manager?.Name,
                 role = employee.loginuser!.role
             };
         }
@@ -310,7 +428,8 @@ public async Task<EmployeewithIDDTO?> GetEmployeeByIdAsync(
             EmployeewithIDDTO employee)
         {
             var existingEmployee = await _db.Employees
-                .Include(e=>e.loginuser)
+                .Include(e => e.loginuser)
+                .Include(e => e.Manager)
                 .FirstOrDefaultAsync(e =>
                     e.EmployeeId == employee.EmployeeId);
 
@@ -364,7 +483,45 @@ public async Task<EmployeewithIDDTO?> GetEmployeeByIdAsync(
             existingEmployee.JoiningDate =
                 employee.JoiningDate;
 
+            if (existingEmployee.loginuser == null)
+            {
+                throw new ArgumentException("Employee login information is missing.");
+            }
+
+            if (!employee.ManagerId.HasValue)
+            {
+                throw new ArgumentException("Manager id is required.");
+            }
+
+            if (employee.ManagerId.Value == existingEmployee.EmployeeId)
+            {
+                throw new ArgumentException("Employee cannot be their own manager.");
+            }
+
+            if (existingEmployee.loginuser.role.Equals("Manager", StringComparison.OrdinalIgnoreCase))
+            {
+                var adminEmployeeId = await GetAnyAdminEmployeeIdAsync();
+
+                if (employee.ManagerId.Value != adminEmployeeId)
+                {
+                    throw new ArgumentException("Manager users must have Admin as manager.");
+                }
+
+                existingEmployee.ManagerId = adminEmployeeId;
+            }
+            else
+            {
+                existingEmployee.ManagerId = await ResolveRequiredManagerIdAsync(
+                    employee.ManagerId,
+                    adminOnly: false);
+            }
+
             await _db.SaveChangesAsync();
+
+            var managerName = await _db.Employees
+                .Where(e => e.EmployeeId == existingEmployee.ManagerId)
+                .Select(e => e.Name)
+                .FirstOrDefaultAsync();
 
             return new EmployeewithIDDTO
             {
@@ -375,6 +532,8 @@ public async Task<EmployeewithIDDTO?> GetEmployeeByIdAsync(
                 Department = existingEmployee.Department,
                 JoiningDate = existingEmployee.JoiningDate,
                 IsActive = existingEmployee.IsActive,
+                ManagerId = existingEmployee.ManagerId,
+                ManagerName = managerName,
                 role = existingEmployee.loginuser!.role
             };
         }

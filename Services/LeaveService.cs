@@ -97,9 +97,17 @@ namespace LeaveManagement.Services
      int? leaveTypeId = null,
      string? status = null,
      DateTime? fromDate = null,
-     DateTime? toDate = null)
+     DateTime? toDate = null,
+     int? managerId = null)
         {
             var query = _db.Leaverequests.AsQueryable();
+
+            if (managerId.HasValue)
+            {
+                query = query.Where(l => _db.Employees.Any(e =>
+                    e.EmployeeId == l.employeeid &&
+                    e.ManagerId == managerId.Value));
+            }
 
             if (employeeId.HasValue)
             {
@@ -150,8 +158,21 @@ namespace LeaveManagement.Services
                 })
                 .ToListAsync();
         }
-        public async Task<IEnumerable<LeaveRequestGetDTO>>GetEmployeeLeavesAsync(int employeeId)
+        public async Task<IEnumerable<LeaveRequestGetDTO>>GetEmployeeLeavesAsync(int employeeId, int? managerId = null)
         {
+            if (managerId.HasValue)
+            {
+                var isDirectReport = await _db.Employees
+                    .AnyAsync(e =>
+                        e.EmployeeId == employeeId &&
+                        e.ManagerId == managerId.Value);
+
+                if (!isDirectReport)
+                {
+                    return Enumerable.Empty<LeaveRequestGetDTO>();
+                }
+            }
+
             var leaves = await _db.Leaverequests
                 .Where(l => l.employeeid == employeeId)
                 .OrderByDescending(l => l.applieddate)
@@ -160,9 +181,10 @@ namespace LeaveManagement.Services
             return leaves.Select(MapToDTO).ToList();
         }
 
-        public async Task<LeaveRequestGetDTO?> GetLeaveByIdAsync(int id)
+        public async Task<LeaveRequestGetDTO?> GetLeaveByIdAsync(int id, int? managerId = null)
         {
             var leave = await _db.Leaverequests
+                .Include(l => l.Employee)
                 .FirstOrDefaultAsync(l =>
                     l.leaverequestid == id);
 
@@ -171,10 +193,15 @@ namespace LeaveManagement.Services
                 return null;
             }
 
+            if (managerId.HasValue && leave.Employee?.ManagerId != managerId.Value)
+            {
+                return null;
+            }
+
             return MapToDTO(leave);
         }
 
-        public async Task<string?> ApproveLeaveAsync(LeaveActionDTO leave)
+        public async Task<string?> ApproveLeaveAsync(LeaveActionDTO leave, int managerId)
         {
             var leaveRequest = await _db.Leaverequests
                 .Include(l => l.Employee)
@@ -201,6 +228,12 @@ namespace LeaveManagement.Services
             {
                 throw new ArgumentException(
                    "The Employee with this ID is Inactive");
+            }
+
+            if (leaveRequest.Employee.ManagerId != managerId)
+            {
+                throw new ArgumentException(
+                    "You can approve leaves only for your direct report employees.");
             }
 
             var balance = await _db.Leavebalances
@@ -236,7 +269,7 @@ namespace LeaveManagement.Services
             return "Your Leave is approved";
         }
 
-        public async Task<string?> RejectLeaveAsync(LeaveActionDTO leave)
+        public async Task<string?> RejectLeaveAsync(LeaveActionDTO leave, int managerId)
         {
             var leaveRequest = await _db.Leaverequests
                 .Include(l => l.Employee)
@@ -253,6 +286,12 @@ namespace LeaveManagement.Services
             {
                 throw new ArgumentException(
                     "Only pending leave requests can be rejected.");
+            }
+
+            if (leaveRequest.Employee?.ManagerId != managerId)
+            {
+                throw new ArgumentException(
+                    "You can reject leaves only for your direct report employees.");
             }
 
             leaveRequest.status = "Rejected";

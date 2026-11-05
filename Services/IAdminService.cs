@@ -8,7 +8,7 @@ namespace LeaveManagement.Services
 
         Task<bool> ChangeToManagerAsync(int employeeId);
 
-        Task<bool> ChangeToEmployeeAsync(int employeeId);
+        Task<bool> ChangeToEmployeeAsync(int employeeId, int managerId);
 
         Task<bool> ChangeStatusAsync(int employeeId,ChangeStatusDTO dto);
         Task<List<GetAllEmployeesDTO>> GetAllUsersAsync();

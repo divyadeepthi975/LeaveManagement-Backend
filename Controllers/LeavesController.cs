@@ -110,13 +110,19 @@ namespace LeaveManagement.Controllers
                     "Employees can get leave information about which they are applied.");
             }
 
+            var managerScopeId =
+                User.IsInRole("Manager")
+                    ? employeeId
+                    : null as int?;
+
             var result =
                 await _leaveService.GetAllLeavesAsync(
                     employeeid,
                     leaveTypeId,
                     status,
                     fromDate,
-                    toDate);
+                    toDate,
+                    managerScopeId);
             if (result.IsNullOrEmpty())
             {
                 return StatusCode(
@@ -144,8 +150,13 @@ namespace LeaveManagement.Controllers
                 return Unauthorized("Invalid employee information.");
             }
 
+            var managerScopeId =
+                User.IsInRole("Manager")
+                    ? employeeId
+                    : null as int?;
+
             var result =
-                await _leaveService.GetLeaveByIdAsync(id);
+                await _leaveService.GetLeaveByIdAsync(id, managerScopeId);
 
             if (result==null)
             {
@@ -230,9 +241,15 @@ namespace LeaveManagement.Controllers
                     "Employees can view only their own leave requests.");
             }
 
+            var managerScopeId =
+                User.IsInRole("Manager")
+                    ? loggedInEmployeeId
+                    : null as int?;
+
             var result =
                 await _leaveService.GetEmployeeLeavesAsync(
-                    employeeId);
+                    employeeId,
+                    managerScopeId);
             if (result.IsNullOrEmpty())
             {
                 return StatusCode(
@@ -264,10 +281,23 @@ namespace LeaveManagement.Controllers
                     "Leave request ID in URL and request body do not match.");
             }
 
+            var userId =
+                User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+            if (userId == null)
+            {
+                return Unauthorized("You are not authenticated.");
+            }
+
+            if (!int.TryParse(userId, out int managerId))
+            {
+                return Unauthorized("Invalid manager information.");
+            }
+
             try
             {
                 var result =
-                    await _leaveService.ApproveLeaveAsync(leave);
+                    await _leaveService.ApproveLeaveAsync(leave, managerId);
 
                 if (result == null)
                 {
@@ -304,10 +334,23 @@ namespace LeaveManagement.Controllers
                     "Leave request ID in URL and request body do not match.");
             }
 
+            var userId =
+                User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+            if (userId == null)
+            {
+                return Unauthorized("You are not authenticated.");
+            }
+
+            if (!int.TryParse(userId, out int managerId))
+            {
+                return Unauthorized("Invalid manager information.");
+            }
+
             try
             {
                 var result =
-                    await _leaveService.RejectLeaveAsync(leave);
+                    await _leaveService.RejectLeaveAsync(leave, managerId);
 
                 if (result == null)
                 {

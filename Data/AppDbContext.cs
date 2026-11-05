@@ -29,6 +29,15 @@ namespace LeaveManagement.Data
                 .HasIndex(e => e.Email)
                 .IsUnique();
 
+            modelBuilder.Entity<Employee>()
+                .HasIndex(e => e.ManagerId);
+
+            modelBuilder.Entity<Employee>()
+                .HasOne(e => e.Manager)
+                .WithMany(e => e.DirectReports)
+                .HasForeignKey(e => e.ManagerId)
+                .OnDelete(DeleteBehavior.Restrict);
+
             modelBuilder.Entity<Leaverequest>()
                 .HasOne(l => l.Employee)
                 .WithMany()
@@ -78,9 +87,10 @@ namespace LeaveManagement.Data
             .HasIndex(l => l.username)
             .IsUnique();
 
-          
-
-            
+            modelBuilder.Entity<Loginusers>()
+                .HasIndex(l => l.role)
+                .HasFilter("[role] = 'Admin'")
+                .IsUnique();
         }
     }
 }

@@ -53,6 +53,7 @@ namespace LeaveManagement
                     Department = "Administration",
                     JoiningDate = DateTime.UtcNow,
                     IsActive = true,
+                    ManagerId=null,
                     loginuser = loginUser
                 };
 

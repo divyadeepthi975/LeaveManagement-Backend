@@ -51,7 +51,29 @@ namespace LeaveManagement.Services
                     throw new Exception("Login account already exists for this email.");
                 }
 
+                if (!employee.ManagerId.HasValue)
+                {
+                    throw new Exception("Manager id is required.");
+                }
 
+                var resolvedManagerId = employee.ManagerId.Value;
+
+                var validManager = await _db.Employees
+                    .Include(e => e.loginuser)
+                    .FirstOrDefaultAsync(e =>
+                        e.EmployeeId == resolvedManagerId &&
+                        e.IsActive);
+
+                if (validManager == null)
+                {
+                    throw new Exception("Manager not found or inactive.");
+                }
+
+                if (validManager.loginuser == null ||
+                    !validManager.loginuser.role.Equals("Manager", StringComparison.OrdinalIgnoreCase))
+                {
+                    throw new Exception("Invalid manager id. Employees must report to a manager.");
+                }
 
                 var loginUser = new Loginusers
                 {
@@ -80,6 +102,7 @@ namespace LeaveManagement.Services
                     Department = employee.Department,
                     JoiningDate = employee.JoiningDate,
                     IsActive = true,
+                    ManagerId = resolvedManagerId,
                     loginuser=loginUser
                 };
 
@@ -122,6 +145,8 @@ namespace LeaveManagement.Services
                     Department = emp.Department,
                     JoiningDate = emp.JoiningDate,
                     IsActive = emp.IsActive,
+                    ManagerId = emp.ManagerId,
+                    ManagerName = validManager.Name,
                     role = loginUser.role
 
                 };
@@ -158,6 +183,50 @@ namespace LeaveManagement.Services
             return "Employee deleted successfully";
         }
 
+        public async Task<bool> ChangeStatusByManagerAsync(
+            int managerId,
+            int employeeId,
+            bool isActive)
+        {
+            var manager = await _db.Employees
+                .Include(e => e.loginuser)
+                .FirstOrDefaultAsync(e =>
+                    e.EmployeeId == managerId &&
+                    e.IsActive);
+
+            if (manager == null ||
+                manager.loginuser == null ||
+                !manager.loginuser.role.Equals("Manager", StringComparison.OrdinalIgnoreCase))
+            {
+                throw new ArgumentException("Invalid manager.");
+            }
+
+            var employee = await _db.Employees
+                .Include(e => e.loginuser)
+                .FirstOrDefaultAsync(e =>
+                    e.EmployeeId == employeeId);
+
+            if (employee == null)
+            {
+                return false;
+            }
+
+            if (employee.loginuser == null ||
+                !employee.loginuser.role.Equals("Employee", StringComparison.OrdinalIgnoreCase))
+            {
+                throw new ArgumentException("Managers can change status only for employees.");
+            }
+
+            if (employee.ManagerId != managerId)
+            {
+                throw new ArgumentException("You can change status only for your direct report employees.");
+            }
+
+            employee.IsActive = isActive;
+            await _db.SaveChangesAsync();
+            return true;
+        }
+
 
         // GET ALL EMPLOYEES
         public async Task<List<EmployeewithIDDTO>> GetAllEmployeesAsync()
@@ -173,6 +242,8 @@ namespace LeaveManagement.Services
                     Department = e.Department,
                     JoiningDate = e.JoiningDate,
                     IsActive = e.IsActive,
+                    ManagerId = e.ManagerId,
+                    ManagerName = e.Manager != null ? e.Manager.Name : null,
                     role = e.loginuser!.role
                 })
                 .ToListAsync();
@@ -192,6 +263,8 @@ namespace LeaveManagement.Services
                     Department = e.Department,
                     JoiningDate = e.JoiningDate,
                     IsActive = e.IsActive,
+                    ManagerId = e.ManagerId,
+                    ManagerName = e.Manager != null ? e.Manager.Name : null,
                     role = e.loginuser!.role
                 })
                 .FirstOrDefaultAsync();
@@ -239,6 +312,11 @@ namespace LeaveManagement.Services
                 Department = emp.Department,
                 JoiningDate = emp.JoiningDate,
                 IsActive = emp.IsActive,
+                ManagerId = emp.ManagerId,
+                ManagerName = await _db.Employees
+                    .Where(e => e.EmployeeId == emp.ManagerId)
+                    .Select(e => e.Name)
+                    .FirstOrDefaultAsync(),
                 role = emp.loginuser.role
             };
         }

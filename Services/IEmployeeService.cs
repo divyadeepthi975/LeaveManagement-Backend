@@ -14,6 +14,11 @@ public interface IEmployeeService
     Task<object?> UpdateAsync(
         EmployeewithIDDTO employee);
 
+    Task<bool> ChangeStatusByManagerAsync(
+        int managerId,
+        int employeeId,
+        bool isActive);
+
     Task<Employee> AddWithIdAsync(
         EmployeeDTO employeeDTO,
         int employeeId);

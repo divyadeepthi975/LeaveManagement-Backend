@@ -15,6 +15,8 @@ namespace LeaveManagement.DTO
         public string Department { get; set; } = string.Empty;
         public DateTime JoiningDate { get; set; }
         public bool IsActive { get; set; }
+        public int? ManagerId { get; set; }
+        public string? ManagerName { get; set; }
         public string role { get; set; }
     }
 }

@@ -27,6 +27,9 @@ namespace LeaveManagement.DTO
 
         [Required]
         public DateTime JoiningDate { get; set; }
+
+        [Required]
+        public int? ManagerId { get; set; }
     }
 
 
@@ -35,6 +38,13 @@ namespace LeaveManagement.DTO
         [Required]
         public bool IsActive { get; set; }
     }
+
+    public class ChangeToEmployeeDTO
+    {
+        [Required]
+        public int ManagerId { get; set; }
+    }
+
     public class GetAllEmployeesDTO
     {
         public int EmployeeId { get; set; }
@@ -52,5 +62,9 @@ namespace LeaveManagement.DTO
         public string Role { get; set; } = string.Empty;
 
         public bool IsActive { get; set; }
+
+        public int? ManagerId { get; set; }
+
+        public string? ManagerName { get; set; }
     }
 }

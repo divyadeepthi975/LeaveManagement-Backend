@@ -110,31 +110,32 @@ namespace LeaveManagement.Controllers
             }
         }
 
-        //[Authorize(Roles = "Admin")]
+        [Authorize(Roles = "Admin")]
+        [HttpPut("users/{UserId}/change-to-employee")]
+        public async Task<IActionResult> ChangeToEmployee(
+            int employeeId,
+            [FromBody] ChangeToEmployeeDTO dto)
+        {
+            try
+            {
+                var result =
+                    await _adminService.ChangeToEmployeeAsync(
+                        employeeId,
+                        dto.ManagerId);
 
-        //[HttpPut("users/{UserId}/change-to-employee")]
-        //public async Task<IActionResult> ChangeToEmployee(
-        //    int employeeId)
-        //{
-        //    try
-        //    {
-        //        var result =
-        //            await _adminService.ChangeToEmployeeAsync(
-        //                employeeId);
+                if (!result)
+                {
+                    return NotFound("User not found.");
+                }
 
-        //        if (!result)
-        //        {
-        //            return NotFound("User not found.");
-        //        }
-
-        //        return Ok(
-        //            "User role changed to Employee successfully.");
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        return BadRequest(ex.Message);
-        //    }
-        //}
+                return Ok(
+                    "User role changed to Employee successfully.");
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
 
 
         [Authorize(Roles = "Admin")]

@@ -34,8 +34,8 @@ namespace LeaveManagement.Migrations
 
                     b.Property<string>("Email")
                         .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
+                        .HasMaxLength(33)
+                        .HasColumnType("nvarchar(33)");
 
                     b.Property<string>("EmployeeCode")
                         .IsRequired()
@@ -47,6 +47,9 @@ namespace LeaveManagement.Migrations
 
                     b.Property<DateTime>("JoiningDate")
                         .HasColumnType("datetime2");
+
+                    b.Property<int?>("ManagerId")
+                        .HasColumnType("int");
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -60,6 +63,8 @@ namespace LeaveManagement.Migrations
 
                     b.HasIndex("EmployeeCode")
                         .IsUnique();
+
+                    b.HasIndex("ManagerId");
 
                     b.ToTable("Employees");
                 });
@@ -181,7 +186,7 @@ namespace LeaveManagement.Migrations
 
                     b.Property<string>("role")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("nvarchar(450)");
 
                     b.Property<string>("username")
                         .IsRequired()
@@ -189,6 +194,10 @@ namespace LeaveManagement.Migrations
                         .HasColumnType("nvarchar(100)");
 
                     b.HasKey("employeeid");
+
+                    b.HasIndex("role")
+                        .IsUnique()
+                        .HasFilter("[role] = 'Admin'");
 
                     b.HasIndex("username")
                         .IsUnique();
@@ -203,6 +212,13 @@ namespace LeaveManagement.Migrations
                         .HasForeignKey("LeaveManagement.Models.Entities.Employee", "EmployeeId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
+
+                    b.HasOne("LeaveManagement.Models.Entities.Employee", "Manager")
+                        .WithMany("DirectReports")
+                        .HasForeignKey("ManagerId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("Manager");
 
                     b.Navigation("loginuser");
                 });
@@ -243,6 +259,11 @@ namespace LeaveManagement.Migrations
                     b.Navigation("Employee");
 
                     b.Navigation("Leavetype");
+                });
+
+            modelBuilder.Entity("LeaveManagement.Models.Entities.Employee", b =>
+                {
+                    b.Navigation("DirectReports");
                 });
 
             modelBuilder.Entity("LeaveManagement.Models.Entities.Loginusers", b =>

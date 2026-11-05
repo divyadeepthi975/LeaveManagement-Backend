@@ -20,7 +20,7 @@ namespace LeaveManagement.Controllers
         [Authorize(Roles = "Manager")]
         [HttpPost("Createemployee")]
         public async Task<IActionResult> CreateEmployee(EmployeeDTO employee) {
-            
+
                 if (!ModelState.IsValid)
                 {
                     return BadRequest(ModelState);
@@ -30,7 +30,7 @@ namespace LeaveManagement.Controllers
                 await _employeeService.CreateEmployeeAsync(employee);
 
             return Ok(result);
-            
+
 
         }
 
@@ -162,6 +162,46 @@ namespace LeaveManagement.Controllers
             var result = await _employeeService.DeleteAsync(id);
 
             return Ok(result);
+        }
+
+        [Authorize(Roles = "Manager")]
+        [HttpPut("{id}/status")]
+        public async Task<IActionResult> ChangeStatusByManager(
+            int id,
+            [FromBody] ChangeStatusDTO dto)
+        {
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+            if (userId == null)
+            {
+                return Unauthorized("You are not authenticated.");
+            }
+
+            if (!int.TryParse(userId, out int managerId))
+            {
+                return Unauthorized("Invalid manager information.");
+            }
+
+            try
+            {
+                var result = await _employeeService.ChangeStatusByManagerAsync(
+                    managerId,
+                    id,
+                    dto.IsActive);
+
+                if (!result)
+                {
+                    return NotFound("Employee not found.");
+                }
+
+                return Ok(dto.IsActive
+                    ? "Employee activated successfully."
+                    : "Employee deactivated successfully.");
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(ex.Message);
+            }
         }
     }
 }
