@@ -70,13 +70,20 @@ namespace LeaveManagement.Controllers
                 return BadRequest(ModelState);
             }
 
-            var result =
-                await _leavetypeService.AddAsync(leavetype);
+            try
+            {
+                var result =
+                    await _leavetypeService.AddAsync(leavetype);
 
-            return CreatedAtAction(
-                nameof(GetById),
-                new { id = result.leavetypeid },
-                result);
+                return CreatedAtAction(
+                    nameof(GetById),
+                    new { id = result.leavetypeid },
+                    result);
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(ex.Message);
+            }
         }
 
 
@@ -99,17 +106,24 @@ namespace LeaveManagement.Controllers
                 return BadRequest(ModelState);
             }
 
-            var result =
-                await _leavetypeService.UpdateLeavetypeAsync(leavetype);
-
-            if (result==null)
+            try
             {
-                return StatusCode(
-                    404,
-                    $"Leavetype with this ID-{id} not found ");
-            }
+                var result =
+                    await _leavetypeService.UpdateLeavetypeAsync(leavetype);
 
-            return Ok(result);
+                if (result==null)
+                {
+                    return StatusCode(
+                        404,
+                        $"Leavetype with this ID-{id} not found ");
+                }
+
+                return Ok(result);
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(ex.Message);
+            }
         }
 
 

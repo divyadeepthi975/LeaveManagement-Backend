@@ -76,6 +76,10 @@ namespace LeaveManagement.Services
                 throw new ArgumentException(
                     "Leave request overlaps with an existing leave period.");
             }
+            if(string.IsNullOrEmpty(leaverequest.reason))
+            {
+                throw new ArgumentException("Reason for leave request is required.");
+            }
             Leaverequest leave = new Leaverequest();
             leave.employeeid= leaverequest.employeeid;
             leave.leavetypeid= leaverequest.leavetypeid;
@@ -295,7 +299,7 @@ namespace LeaveManagement.Services
             }
 
             leaveRequest.status = "Rejected";
-            leaveRequest.approvedby = "Rejected";
+            leaveRequest.approvedby = leave.approvedby;
             leaveRequest.comments = leave.comments;
 
             await _db.SaveChangesAsync();

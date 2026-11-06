@@ -18,14 +18,22 @@ namespace LeaveManagement.Services
             .AnyAsync(l => l.leavetypename.ToLower() == leavetype.leavetypename.ToLower());
             if (exists)
             {
-                throw new Exception("Leave type with this name already exists.");
+                throw new ArgumentException("Leave type with this name already exists.");
             }
 
             Leavetype leave = new Leavetype();
             leave.leavetypename = leavetype.leavetypename;
             leave.maximumdays= leavetype.maximumdays;
             _db.Leavetypes.Add(leave);
-            await _db.SaveChangesAsync();
+
+            try
+            {
+                await _db.SaveChangesAsync();
+            }
+            catch (DbUpdateException)
+            {
+                throw new ArgumentException("Leave type with this name already exists.");
+            }
 
             var employees = await _db.Employees 
             .ToListAsync();
@@ -88,11 +96,31 @@ namespace LeaveManagement.Services
             {
                 return "You can't deactivate leavetype with this method.";
             }
+
+            bool duplicateNameExists = await _db.Leavetypes
+                .AnyAsync(l =>
+                    l.leavetypeid != leavetype.leavetypeid &&
+                    l.leavetypename.ToLower() == leavetype.leavetypename.ToLower());
+
+            if (duplicateNameExists)
+            {
+                throw new ArgumentException("Leave type with this name already exists.");
+            }
+
             objLeavetype.leavetypeid = leavetype.leavetypeid;
             objLeavetype.leavetypename = leavetype.leavetypename;
             objLeavetype.maximumdays = leavetype.maximumdays;
             objLeavetype.IsActive = leavetype.IsActive;
-            await _db.SaveChangesAsync();
+
+            try
+            {
+                await _db.SaveChangesAsync();
+            }
+            catch (DbUpdateException)
+            {
+                throw new ArgumentException("Leave type with this name already exists.");
+            }
+
             return objLeavetype;
 
         }
