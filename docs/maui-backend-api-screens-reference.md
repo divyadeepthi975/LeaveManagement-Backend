@@ -98,7 +98,7 @@ Purpose: strongly typed request/response handling for mobile-side API calls.
 ### Tab mapping now
 - **Admin**: `Dashboard`, `Users`, `Employees`, `Leave Types`, `Leaves`
 - **Manager**: `Dashboard`, `Employees`, `Approvals`, `Leave Types`, `Leaves`
-- **Employee**: `Profile`, `Leave Balance`, `Apply Leave`, `My Leaves`, `Leave Types`
+- **Employee**: `Profile`, `Leave Balance`, `Leave Types`,`Apply Leave`, `My Leaves`
 
 ---
 

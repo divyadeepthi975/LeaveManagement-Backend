@@ -39,7 +39,14 @@ namespace LeaveManagement.Controllers
         [HttpGet]
         public async Task<IActionResult> GetAllEmployees()
         {
-            var employees = await _employeeService.GetAllEmployeesAsync();
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+            if (!int.TryParse(userId, out var managerId))
+            {
+                return Unauthorized("Invalid manager information.");
+            }
+
+            var employees = await _employeeService.GetEmployeesByManagerAsync(managerId);
 
             return Ok(employees);
         }

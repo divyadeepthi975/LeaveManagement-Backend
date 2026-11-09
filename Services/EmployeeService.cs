@@ -228,11 +228,11 @@ namespace LeaveManagement.Services
         }
 
 
-        // GET ALL EMPLOYEES
-        public async Task<List<EmployeewithIDDTO>> GetAllEmployeesAsync()
+        // GET EMPLOYEES FOR MANAGER
+        public async Task<List<EmployeewithIDDTO>> GetEmployeesByManagerAsync(int managerId)
         {
             return await _db.Employees
-                .Where(e => e.loginuser!.role == "Employee")
+                .Where(e => e.ManagerId == managerId && e.loginuser!.role == "Employee")
                 .Select(e => new EmployeewithIDDTO
                 {
                     EmployeeId = e.EmployeeId,

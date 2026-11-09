@@ -7,7 +7,7 @@ public interface IEmployeeService
 
     Task<string> DeleteAsync(int id);
 
-    Task<List<EmployeewithIDDTO>> GetAllEmployeesAsync();
+    Task<List<EmployeewithIDDTO>> GetEmployeesByManagerAsync(int managerId);
 
     Task<EmployeewithIDDTO?> GetByIdAsync(int id);
 
