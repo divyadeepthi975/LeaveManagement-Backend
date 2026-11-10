@@ -270,6 +270,26 @@ namespace LeaveManagement.Services
                 .FirstOrDefaultAsync();
         }
 
+        public async Task<EmployeewithIDDTO?> GetByIdForManagerAsync(int employeeId, int managerId)
+        {
+            return await _db.Employees
+                .Where(e => e.EmployeeId == employeeId && e.ManagerId == managerId)
+                .Select(e => new EmployeewithIDDTO
+                {
+                    EmployeeId = e.EmployeeId,
+                    EmployeeCode = e.EmployeeCode,
+                    Name = e.Name,
+                    Email = e.Email,
+                    Department = e.Department,
+                    JoiningDate = e.JoiningDate,
+                    IsActive = e.IsActive,
+                    ManagerId = e.ManagerId,
+                    ManagerName = e.Manager != null ? e.Manager.Name : null,
+                    role = e.loginuser!.role
+                })
+                .FirstOrDefaultAsync();
+        }
+
 
         // UPDATE EMPLOYEE
         public async Task<object?> UpdateAsync(

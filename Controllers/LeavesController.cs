@@ -296,6 +296,7 @@ namespace LeaveManagement.Controllers
 
             try
             {
+                leave.approvedby = User.FindFirst(ClaimTypes.Name)?.Value ?? string.Empty;
                 var result =
                     await _leaveService.ApproveLeaveAsync(leave, managerId);
 
@@ -349,6 +350,7 @@ namespace LeaveManagement.Controllers
 
             try
             {
+                leave.approvedby = User.FindFirst(ClaimTypes.Name)?.Value ?? string.Empty;
                 var result =
                     await _leaveService.RejectLeaveAsync(leave, managerId);
 

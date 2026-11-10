@@ -75,18 +75,14 @@ namespace LeaveManagement.Controllers
                 return StatusCode(403, "Employees can view only their own details.");
             }
 
-            var employee = await _employeeService.GetByIdAsync(id);
+            var employee = User.IsInRole("Manager")
+                ? await _employeeService.GetByIdForManagerAsync(id, employeeId)
+                : await _employeeService.GetByIdAsync(id);
 
             if (employee == null)
             {
                 return NotFound("Employee not found.");
             }
-            foreach (var claim in User.Claims)
-            {
-                Console.WriteLine(claim.Type);
-                Console.WriteLine(claim.Value);
-            }
-
             return Ok(employee);
         }
 

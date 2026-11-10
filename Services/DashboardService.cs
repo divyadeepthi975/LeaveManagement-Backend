@@ -13,23 +13,38 @@ namespace LeaveManagement.Services
             _db = db;
         }
 
-        public async Task<DashboardDTO> GetDashboardSummary()
+        public async Task<DashboardDTO> GetDashboardSummary(int? managerId = null, string? managerUsername = null)
         {
-            int totalEmployees = await _db.Employees.CountAsync();
+            var employeeQuery = _db.Employees.AsQueryable();
+            var leaveQuery = _db.Leaverequests.AsQueryable();
 
-            int activeEmployees = await _db.Employees.CountAsync();
+            if (managerId.HasValue)
+            {
+                employeeQuery = employeeQuery.Where(e => e.ManagerId == managerId.Value);
+                leaveQuery = leaveQuery.Where(l => _db.Employees.Any(e =>
+                   e.EmployeeId == l.employeeid && e.ManagerId == managerId.Value));
 
-            int pendingRequests = await _db.Leaverequests
+            }
+
+            int totalEmployees = await employeeQuery.CountAsync();
+            int activeEmployees = managerId.HasValue
+                ? await employeeQuery.CountAsync(e => e.IsActive)
+                : await employeeQuery.CountAsync();
+
+            int pendingRequests = await leaveQuery
                 .CountAsync(l => l.status == "Pending");
 
-            int approvedRequests = await _db.Leaverequests
-                .CountAsync(l => l.status == "Approved");
+            int approvedRequests = await leaveQuery.CountAsync(l =>
+                l.status == "Approved" &&
+                (!managerId.HasValue || l.approvedby == managerUsername));
 
-            int rejectedRequests = await _db.Leaverequests
-                .CountAsync(l => l.status == "Rejected");
+            int rejectedRequests = await leaveQuery.CountAsync(l =>
+                l.status == "Rejected" &&
+                (!managerId.HasValue || l.approvedby == managerUsername));
 
-                   var approvedLeaves = await _db.Leaverequests
-                    .Where(l => l.status == "Approved")
+            var approvedLeaves = await leaveQuery
+                    .Where(l => l.status == "Approved" &&
+                        (!managerId.HasValue || l.approvedby == managerUsername))
                     .Select(l => new
                     {
                         l.fromdate,
@@ -40,7 +55,7 @@ namespace LeaveManagement.Services
                     var totalApprovedDays = approvedLeaves.Sum(l => (l.todate - l.fromdate).Days + 1);
             return new DashboardDTO
             {
-                 TotalEmployees = totalEmployees,
+                TotalEmployees = totalEmployees,
                 ActiveEmployees = activeEmployees,
                 PendingRequests = pendingRequests,
                 ApprovedRequests = approvedRequests,

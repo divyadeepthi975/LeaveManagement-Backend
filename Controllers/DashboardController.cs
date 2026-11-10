@@ -1,6 +1,7 @@
 ﻿using LeaveManagement.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 
 namespace LeaveManagement.Controllers
 {
@@ -18,7 +19,21 @@ namespace LeaveManagement.Controllers
         [HttpGet("leave-summary")]
         public async Task<IActionResult> GetLeaveSummary()
         {
-            var result = await _dashboardService.GetDashboardSummary();
+            int? managerId = null;
+            string? managerUsername = null;
+
+            if (User.IsInRole("Manager"))
+            {
+                if (!int.TryParse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value, out var parsedManagerId))
+                {
+                    return Unauthorized("Invalid manager information.");
+                }
+
+                managerId = parsedManagerId;
+                managerUsername = User.FindFirst(ClaimTypes.Name)?.Value;
+            }
+
+            var result = await _dashboardService.GetDashboardSummary(managerId, managerUsername);
 
             return Ok(result);
         }
