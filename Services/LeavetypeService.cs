@@ -2,6 +2,7 @@
 using LeaveManagement.DTO;
 using LeaveManagement.Models.Entities;
 using Microsoft.EntityFrameworkCore;
+using System.Text.RegularExpressions;
 
 namespace LeaveManagement.Services
 {
@@ -14,11 +15,10 @@ namespace LeaveManagement.Services
         }
         public async Task<Leavetype> AddAsync(LeavetypeDTO leavetype)
         {
-            bool exists = await _db.Leavetypes
-            .AnyAsync(l => l.leavetypename.ToLower() == leavetype.leavetypename.ToLower());
-            if (exists)
+            var similarName = await FindSimilarLeaveTypeNameAsync(leavetype.leavetypename);
+            if (similarName != null)
             {
-                throw new ArgumentException("Leave type with this name already exists.");
+                throw new ArgumentException($"A similar leave type already exists: {similarName}.");
             }
 
             Leavetype leave = new Leavetype();
@@ -97,14 +97,13 @@ namespace LeaveManagement.Services
                 return "You can't deactivate leavetype with this method.";
             }
 
-            bool duplicateNameExists = await _db.Leavetypes
-                .AnyAsync(l =>
-                    l.leavetypeid != leavetype.leavetypeid &&
-                    l.leavetypename.ToLower() == leavetype.leavetypename.ToLower());
+            var similarName = await FindSimilarLeaveTypeNameAsync(
+                leavetype.leavetypename,
+                leavetype.leavetypeid);
 
-            if (duplicateNameExists)
+            if (similarName != null)
             {
-                throw new ArgumentException("Leave type with this name already exists.");
+                throw new ArgumentException($"A similar leave type already exists: {similarName}.");
             }
 
             objLeavetype.leavetypeid = leavetype.leavetypeid;
@@ -146,6 +145,36 @@ namespace LeaveManagement.Services
             return isActive
                 ? $"leavetype with the id-{id} is successfully activated"
                 : $"leavetype with the id-{id} is successfully deactivated";
+        }
+
+        private async Task<string?> FindSimilarLeaveTypeNameAsync(string name, int? excludedId = null)
+        {
+            var genericWords = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+            {
+                "leave",
+                "leaves",
+                "next"
+            };
+
+            var candidateWords = Regex.Matches(name, @"[\p{L}\p{N}]+")
+                .Select(match => match.Value)
+                .Where(word => !genericWords.Contains(word))
+                .ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+            var existingNames = await _db.Leavetypes
+                .Where(leaveType => !excludedId.HasValue || leaveType.leavetypeid != excludedId.Value)
+                .Select(leaveType => leaveType.leavetypename)
+                .ToListAsync();
+
+            return existingNames.FirstOrDefault(existingName =>
+            {
+                var existingWords = Regex.Matches(existingName, @"[\p{L}\p{N}]+")
+                    .Select(match => match.Value)
+                    .Where(word => !genericWords.Contains(word))
+                    .ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+                return candidateWords.Count > 0 && candidateWords.Overlaps(existingWords);
+            });
         }
     }
 }

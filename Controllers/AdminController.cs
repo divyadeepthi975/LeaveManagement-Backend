@@ -2,6 +2,7 @@
 using LeaveManagement.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 
 namespace LeaveManagement.Controllers
 {
@@ -145,6 +146,16 @@ namespace LeaveManagement.Controllers
             int employeeId,
             [FromBody] ChangeStatusDTO dto)
         {
+            if (!int.TryParse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value, out var adminId))
+            {
+                return Unauthorized("Invalid admin information.");
+            }
+
+            if (employeeId == adminId)
+            {
+                return BadRequest("You cannot change your own account status.");
+            }
+
             try
             {
                 var result =
@@ -210,10 +221,15 @@ public async Task<IActionResult> GetEmployeeById(
                     return BadRequest(
                         "Employee ID in URL and request body do not match.");
                 }
-                if (employeeId == 1)
+                if (!int.TryParse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value, out var adminId))
+                {
+                    return Unauthorized("Invalid admin information.");
+                }
+
+                if (employeeId == adminId)
                 {
                     return BadRequest(
-                        "You can't edit this employee");
+                        "You cannot edit your own account.");
                 }
 
                 var result =
