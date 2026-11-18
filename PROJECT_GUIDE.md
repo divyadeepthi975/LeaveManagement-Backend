@@ -84,12 +84,13 @@ The API derives the Manager's identity from the JWT. Employee listings and leave
 
 ### Admin
 
-The Admin tabs are currently:
+The Admin tabs currently configured in `RoleShellFactory.cs` are:
 
 - **Dashboard**: application-wide summary statistics.
-- **Profile**: view the signed-in Admin's own details. The Admin profile screen does not show the Employee/Manager profile update control.
 - **Users**: create users, view all users, update other users, change other users' active status, and manage Employee/Manager roles. The signed-in Admin's own user record is excluded from update and activate/deactivate controls; the backend also rejects attempts to update or change the status of the current Admin account.
 - **Leave Types**: create, view, update, activate, and deactivate leave types.
+
+The backend supports `GET api/employee/me` for Admin profile data. The shared Profile screen is view-only for Admin, but **Profile is not currently included in the Admin tab list**, so the Admin cannot currently navigate to that screen from the dashboard.
 
 Role changes are distinct from editing profile fields or active status. An Admin can convert an Employee to Manager or a Manager to Employee, with the required manager relationship handled by the API.
 
@@ -128,7 +129,7 @@ Key backend folders/files:
 ### Important data relationships
 
 - Each login account is linked to an employee record.
-- An Employee has an optional `ManagerId`; a Manager's direct reports reference that Manager's employee ID.
+- An Employee has an `ManagerId`; a Manager's direct reports reference that Manager's employee ID.
 - A leave request references one employee and one leave type.
 - A leave balance tracks an employee's used and allowed days for a leave type.
 - A newly created leave type receives a balance record for existing employees.
@@ -144,9 +145,9 @@ These are the main routes visible in the current client and backend. Authorizati
 | Current user's details | `GET api/employee/me` | Employee, Manager, Admin |
 | Manager's employee list | `GET api/employee` | Manager; results are direct reports |
 | Employee details by ID | `GET api/employee/getbyid/{id}` | Manager (direct report only), Employee (self only) |
-| Employee leave balance | `GET api/employees/{employeeId}/leave-balance` | See backend authorization rules |
+| Employee leave balance | `GET api/employees/{employeeId}/leave-balance` | Employee/Manager, subject to ownership checks |
 | Apply for leave | `POST api/leaves` | Employee (self only) |
-| List leave requests | `GET api/leaves` | Employee (own requests), Manager (direct reports) |
+| List leave requests | `GET api/leaves` | Employee (own requests; pass `employeeid`), Manager (direct reports) |
 | Get one leave request | `GET api/leaves/{id}` | Employee/Manager with ownership scope |
 | Approve/reject leave | `PUT api/leaves/{id}/approve`, `PUT api/leaves/{id}/reject` | Manager (direct-report request only) |
 | List leave types | `GET api/leavetypes/getall` | Employee, Manager, Admin |
@@ -208,7 +209,7 @@ When something does not work:
 
 A good order for reading the project is:
 
-1. `RoleShellFactory.cs` — see how role tabs are selected.
+1. `RoleShellFactory.cs` — see how role tabs are selected. Admin currently has Dashboard, Users, and Leave Types; a Profile API exists but Profile is not currently an Admin tab.
 2. `PlaceholderPage.cs` — follow a screen branch such as `"My Leaves"` or `"Approvals"`.
 3. `AuthService.cs` — find the API method called by that screen.
 4. The matching controller — see authorization and request handling.

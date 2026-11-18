@@ -80,19 +80,26 @@ var audience =
 if (string.IsNullOrWhiteSpace(jwtKey))
 {
     throw new InvalidOperationException(
-        "JWT key is not configured.");
+        "JWT key is not configured. Set Jwt__Key in .env or the environment.");
 }
 
 if (string.IsNullOrWhiteSpace(issuer))
 {
     throw new InvalidOperationException(
-        "JWT issuer is missing.");
+        "JWT issuer is missing. Set Jwt__Issuer in .env or the environment.");
 }
 
 if (string.IsNullOrWhiteSpace(audience))
 {
     throw new InvalidOperationException(
-        "JWT audience is missing.");
+        "JWT audience is missing. Set Jwt__Audience in .env or the environment.");
+}
+
+if (!int.TryParse(builder.Configuration["Jwt:ExpiryMinutes"], out var jwtExpiryMinutes) ||
+    jwtExpiryMinutes <= 0)
+{
+    throw new InvalidOperationException(
+        "JWT expiry must be a positive number. Set Jwt__ExpiryMinutes in .env or the environment.");
 }
 
 
@@ -184,7 +191,10 @@ using (var scope = app.Services.CreateScope())
     var db = scope.ServiceProvider
         .GetRequiredService<AppDbContext>();
 
-    await AdminSeeder.SeedAdminAsync(db);
+    await AdminSeeder.BootstrapInitialAdminAsync(
+        db,
+        builder.Configuration,
+        app.Logger);
 }
 
 

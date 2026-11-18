@@ -102,6 +102,15 @@ namespace LeaveManagement.Services
             string? audience =
                 _configuration["Jwt:Audience"];
 
+            if (!int.TryParse(
+                    _configuration["Jwt:ExpiryMinutes"],
+                    out var expiryMinutes) ||
+                expiryMinutes <= 0)
+            {
+                throw new InvalidOperationException(
+                    "JWT expiry must be a positive number.");
+            }
+
             if (string.IsNullOrWhiteSpace(keyValue) ||
                 string.IsNullOrWhiteSpace(issuer) ||
                 string.IsNullOrWhiteSpace(audience))
@@ -121,7 +130,7 @@ namespace LeaveManagement.Services
                 issuer: issuer,
                 audience: audience,
                 claims: claims,
-                expires: DateTime.UtcNow.AddMinutes(60),
+                expires: DateTime.UtcNow.AddMinutes(expiryMinutes),
                 signingCredentials: credentials);
 
             return new JwtSecurityTokenHandler()
